@@ -160,7 +160,7 @@ def usuarios_cadastro():
         db.execute("INSERT INTO contatos (nome, cpf, telefone, email, endereço) VALUES (?, ?, ?, ?, ?)", nome, cpf, telefone, email, endereço)
         
         flash("Usuário cadastrado com sucesso!", "success")
-        return redirect('../')
+        return redirect('/')
     else:
         return render_template("usuarios/cadastro.html")
 
@@ -259,11 +259,11 @@ def acervo():
             "atual":pagina_atual,
             "max":len(acervo)/LIVROS_POR_PAGINA
         }
-        return render_template("acervo.html", acervo=acervo, edited_book=edited_book, filtros=filtros_placeholder, page_data=page_data)
+        return render_template("acervo/index.html", acervo=acervo, edited_book=edited_book, filtros=filtros_placeholder, page_data=page_data)
 
-@app.route("/incluir", methods=["GET", "POST"])
+@app.route("/acervo/incluir", methods=["GET", "POST"])
 @login_required
-def incluir():
+def acervo_incluir():
     if request.method == "POST":
         titulo = request.form.get('titulo')
         autor = request.form.get('autor')
@@ -272,9 +272,9 @@ def incluir():
 
         db.execute('INSERT INTO acervo (titulo, autor, editora, ano, status) VALUES (?, ?, ?, ?, "DISPONIVEL")', titulo, autor, editora, ano)
         flash("Livro cadastrado", "success")
-        return redirect(url_for("/acervo.html"))       
+        return redirect(url_for("/acervo"))       
     else:
-        return render_template("incluir.html")
+        return render_template("acervo/incluir.html")
 
 if __name__ == '__main__':
     app.run(debug=True)
