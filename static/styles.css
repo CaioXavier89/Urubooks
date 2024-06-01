@@ -46,4 +46,11 @@ nav .navbar-brand {
     border-width: 1px;
     border-color: #dee2e6;
     padding: 1.5rem;
+    padding-bottom:0;
+}
+
+.btn-border {
+    border:solid;
+    border-width: 1px;
+    border-color: #dee2e6;
 }

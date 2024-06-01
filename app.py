@@ -204,11 +204,6 @@ def acervo():
         if edit_id := request.args.get("edit-book"):
             edited_book = db.execute("SELECT * FROM acervo WHERE id = ?", edit_id)[0] 
         
-         # prepara dados para paginação
-        LIVROS_POR_PAGINA = 50
-        pagina_atual = int(request.args.get("pagina", 0))
-        offset = LIVROS_POR_PAGINA * pagina_atual
-
 
         # handles filtros
         # cria dicionário de filtros
@@ -241,7 +236,11 @@ def acervo():
         if request.args.get('mostrar-arquivados') == 'true':
             filtro_arquivado = " id IN (SELECT id FROM acervo WHERE status = 'DISPONIVEL' OR status = 'EMPRESTADO' OR status = 'ARQUIVADO')"
 
-            
+        
+        # prepara dados para paginação
+        LIVROS_POR_PAGINA = 50
+        pagina_atual = int(request.args.get("pagina", 0))
+        offset = LIVROS_POR_PAGINA * pagina_atual        
 
         
         # prepara query base
@@ -250,14 +249,17 @@ def acervo():
         if filtros:
             query += " WHERE " + " AND ".join([f"{key} LIKE ?" for key in filtros])
             acervo = db.execute(query + " AND " + filtro_arquivado + " ORDER BY titulo" + " LIMIT ?, ?", *tuple(filtros.values()), offset, LIVROS_POR_PAGINA)
+            search_size = len(db.execute(query + " AND " + filtro_arquivado + " ORDER BY titulo", *tuple(filtros.values())))
         # caso não haja filtros, roda query base
         else:
             acervo = db.execute(query + " WHERE " + filtro_arquivado + " ORDER BY titulo" + " LIMIT ?, ?", offset, LIVROS_POR_PAGINA)
+            search_size = len(db.execute(query + " WHERE " + filtro_arquivado))
 
         # prepara dicionário para ser usado no HTML
         page_data = {
+            "search_size":search_size,
             "atual":pagina_atual,
-            "max":len(acervo)/LIVROS_POR_PAGINA
+            "max":int(search_size/LIVROS_POR_PAGINA)
         }
         return render_template("acervo/index.html", acervo=acervo, edited_book=edited_book, filtros=filtros_placeholder, page_data=page_data)
 
