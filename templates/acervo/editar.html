@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Incluir
+{% endblock %}
+
+{% block main %}
+<h3 class='mb-3'>Editar livro</h3>
+
+<div id="input-group">
+    <h5 class='mb-3'>{{ edited_book.titulo }}</h3>
+    <form id="book-editing" action="/acervo/editar" method="post">
+        <input type="hidden" name="book-id" value="{{ edited_book.id }}">
+        <div class="input-group mb-3">
+            <span class="input-group-text">Título</span>
+            <input name="titulo" type="text" class="form-control" autocomplete="off" value="{{ edited_book.titulo }}" required>
+        </div>
+        <div class="input-group mb-3">
+            <span class="input-group-text">Autor</span>
+            <input name="autor" type="text" class="form-control" autocomplete="off" value="{{ edited_book.autor }}" required>
+        </div>
+        <div class="input-group mb-3">
+            <span class="input-group-text">Ano</span>
+            <input name="ano" type="text" class="form-control" autocomplete="off" value="{{ edited_book.ano }}" required>
+        </div>
+        <div class="input-group mb-3">
+            <span class="input-group-text">Editora</span>
+            <input name="editora" type="text" class="form-control" autocomplete="off" value="{{ edited_book.editora }}" required>
+        </div>
+        <div class="input-group mb-3">
+            <span class="input-group-text">Status</span>
+            <select name="status" type="text" class="form-control" autocomplete="off" required>
+                <option value="DISPONIVEL">DISPONIVEL</option>
+                <option value="ARQUIVADO">ARQUIVADO</option>
+                <option value="EMPRESTADO">EMPRESTADO</option>
+            </select>
+        </div>
+    </form>
+        <div class="row justify-content-md-center">
+            <div class="col-auto">
+                <button type='submit' form="book-editing" class="btn btn-light btn-border">Editar</button>    
+            </div>
+            <div class="col-auto">
+                <form action="/acervo/editar" method="post" onsubmit="return showWarning()">
+                    <input name="delete-id" value="{{ edited_book.id }}" type="hidden">
+                    <button class="btn btn-danger" type="submit">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
+                            <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
+                          </svg> Deletar
+                    </button>
+                </form>
+            </div>
+        </div>
+</div>
+<script>
+    function showWarning() {
+        var result = confirm("Essa ação apagará todos os registros do histórico relacionados à obra. Deseja continuar?");
+        return result;
+    }
+</script>
+{% endblock %}

@@ -5,66 +5,10 @@
 {% endblock %}
 
 {% block main %}
-<!-- POP UP DE EDIÇÃO --> 
-{% if edited_book %}
-    <div id="popup-container">
-        <div class="container popup-content px-3">
-            <div class="d-grid justify-content-end">
-                    <a href="/acervo" class="btn btn-danger" type="submit">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-                            <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-                        </svg>
-                    </a>
-            </div>
-            <p style="margin: 0px">Editando...</p>
-            <h3 class='mb-3'>{{ edited_book.titulo }}</h3>
-            <form id="book-editing" class='px-md-5' action="/acervo" method="post">
-                <input name="edited-book-id" value="{{ edited_book.id }}" type="hidden">
-                
-                <label for="titulo">Titulo</label>
-                <div class="mb-3">
-                    <input name="titulo-anterior" value="{{ edited_book.titulo }}" type="hidden">
-                    <input name="edit-titulo" placeholder="{{ edited_book.titulo }}" class="form-control form-control.lg" autocomplete="off" autofocus class="form-control mx-auto w-auto" id="titulo" type="text">
-                </div>                  
-                <label for="autor">Autor</label>
-                <div class="mb-3">
-                    <input name="autor-anterior" value="{{ edited_book.autor }}" type="hidden">
-                    <input name="edit-autor" placeholder="{{ edited_book.autor }}" id="autor" class="form-control form-control.lg"  type="text">
-                </div>
-                <label for="ano">Ano</label>
-                <div class="mb-3">
-                    <input name="ano-anterior" value="{{ edited_book.ano }}" type="hidden">
-                    <input id="ano" class="form-control" name="edit-ano" placeholder="{{ edited_book.ano }}" type="text">
-                </div>
-                <label for="editora">Editora</label>
-                <div class="mb-3">
-                    <input name="editora-anterior" value="{{ edited_book.editora }}" type="hidden">
-                    <input id="editora" class="form-control mx-auto" name="edit-editora" placeholder="{{ edited_book.editora }}" type="text">
-                </div>
-                <label for="status">Status</label>
-                <div class="mb-3">
-                    <input name="status-anterior" value="{{ edited_book.status }}" type="hidden">
-                    <input name="edit-status" placeholder="{{ edited_book.status }}" id="status" class="form-control mx-auto"  type="text">
-                </div>
-            </form>
-            <div class="d-grid gap-3 col-6 mx-auto">
-                <button form="book-editing" class="d-block btn btn-primary" type="submit">Editar</button>
-                <form action="/acervo" method="post">
-                    <input name="delete-id" value="{{ edited_book.id }}" type="hidden">
-                    <button class="btn btn-danger" type="submit">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
-                            <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
-                          </svg> Excluir
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-{% endif %}
 
 <h3 class='mb-3'>Acervo</h3>
 <!-- FILTROS -->
-<div id="input-group">
+<div id="input-group" style="padding-bottom:0px;">
     <form id="filtros-form" action="/acervo" method="get">
         <div class="row">
             <div class="col-lg-6">
@@ -137,7 +81,7 @@
                     <td>{{ livro.status[:5] }}</td>
                     <td class="options-cell">
                         <div class="btn-group">
-                            <form action="/acervo" method="get">
+                            <form action="/acervo/editar" method="get">
                                 <input name="edit-book" value="{{ livro.id }}" type='hidden'/>
                                 <button type='submit' class="btn btn-outline-danger mx-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
@@ -147,7 +91,7 @@
                                 </button>
                             </form>
                             <form action="/emprestar" method="get">
-                                <input name="edit-book" value="{{ livro.id }}" type='hidden'/>
+                                <input name="book-id" value="{{ livro.id }}" type='hidden'/>
                                 <button type='submit' class="btn btn-outline-primary mx-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar-week" viewBox="0 0 16 16">
                                         <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z"/>

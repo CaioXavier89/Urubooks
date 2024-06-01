@@ -166,102 +166,70 @@ def usuarios_cadastro():
 
 @app.route("/acervo", methods=["GET", "POST"])
 @login_required
-def acervo():
-    if request.method == "POST":
-        ''' o método post é usado nessa rota para editar e excluir livros do acervo '''
-        # handles exclusão do banco de dados
-        delete_request = request.form.get('delete-id')
-        if delete_request:
-            db.execute("UPDATE acervo SET status = 'ARQUIVADO' WHERE id = ?", delete_request)
-            flash("Status da obra atualizado com sucesso", "warning")
-            return redirect("/acervo")
-        
-        # handles edição de livro
-        # identifica o livro sendo editado
-        edited_book = db.execute("SELECT * FROM acervo WHERE id = ?", request.form.get('edited-book-id'))
-        # checa se há houve algum input nos campos, em caso negativo, atribui o valor anterior
-        if edited_book:
-            new_titulo = request.form.get('edit-titulo') if request.form.get('edit-titulo') else request.form.get('titulo-anterior')
-            new_autor = request.form.get('edit-autor') if request.form.get('edit-autor') else request.form.get('autor-anterior')
-            new_editora = request.form.get('edit-editora') if request.form.get('edit-editora') else request.form.get('editora-anterior')
-            new_ano = request.form.get('edit-ano') if request.form.get('edit-ano') else request.form.get('ano-anterior')
-            new_status = request.form.get('edit-status') if request.form.get('edit-status') else request.form.get('status-anterior')
-            # atualiza banco de dados
-            db.execute("UPDATE acervo SET titulo = ?, autor = ?, editora = ?, ano = ?, status = ? WHERE id = ?", new_titulo, new_autor, new_editora, new_ano, new_status, edited_book[0]["id"])
-            
-            flash("A obra foi editada com sucesso!", "success")
-            return redirect("/acervo")
-
-        # caso nada tenha sido editado ou deletado
-        flash("Nada foi alterado", "success")
-        return redirect("/acervo")
+def acervo(): 
+    # checa se há request de edição para abrir pop-up
+    edited_book = {}
+    if edit_id := request.args.get("edit-book"):
+        edited_book = db.execute("SELECT * FROM acervo WHERE id = ?", edit_id)[0] 
     
+
+    # handles filtros
+    # cria dicionário de filtros
+    filtros = {}
+    # filtros não modificados para serem usados no HTML
+    filtros_placeholder = {}
+
+    # adiciona filtro ao dicionário se houver request
+    filtro_titulo = request.args.get('filtro-titulo')
+    if filtro_titulo:
+        filtros_placeholder["titulo"] = filtro_titulo
+        filtros["titulo"] = "%" + filtro_titulo + "%"
+
+    filtro_autor = request.args.get('filtro-autor')
+    if filtro_autor:
+        filtros_placeholder["autor"] = filtro_autor
+        filtros["autor"] = "%" + filtro_autor + "%"
+
+    filtro_ano = request.args.get("filtro-ano")
+    if filtro_ano:
+        filtros_placeholder["ano"] = filtro_ano
+        filtros["ano"] = "%" + filtro_ano + "%"
+
+    filtro_editora = request.args.get("filtro-editora")
+    if filtro_editora:
+        filtros_placeholder["editora"] = filtro_editora
+        filtros["editora"] = "%" + filtro_editora + "%"
+
+    filtro_arquivado = " id IN (SELECT id FROM acervo WHERE status != 'ARQUIVADO')"
+    if request.args.get('mostrar-arquivados') == 'true':
+        filtro_arquivado = " id IN (SELECT id FROM acervo WHERE status = 'DISPONIVEL' OR status = 'EMPRESTADO' OR status = 'ARQUIVADO')"
+
     
-    # MÉTODO = "GET"
-    else: 
-        # checa se há request de edição para abrir pop-up
-        edited_book = {}
-        if edit_id := request.args.get("edit-book"):
-            edited_book = db.execute("SELECT * FROM acervo WHERE id = ?", edit_id)[0] 
-        
+    # prepara dados para paginação
+    LIVROS_POR_PAGINA = 50
+    pagina_atual = int(request.args.get("pagina", 0))
+    offset = LIVROS_POR_PAGINA * pagina_atual        
 
-        # handles filtros
-        # cria dicionário de filtros
-        filtros = {}
-        # filtros não modificados para serem usados no HTML
-        filtros_placeholder = {}
+    
+    # prepara query base
+    query = "SELECT * FROM acervo"
+    # adiciona filtros existentes
+    if filtros:
+        query += " WHERE " + " AND ".join([f"{key} LIKE ?" for key in filtros])
+        acervo = db.execute(query + " AND " + filtro_arquivado + " ORDER BY titulo" + " LIMIT ?, ?", *tuple(filtros.values()), offset, LIVROS_POR_PAGINA)
+        search_size = len(db.execute(query + " AND " + filtro_arquivado + " ORDER BY titulo", *tuple(filtros.values())))
+    # caso não haja filtros, roda query base
+    else:
+        acervo = db.execute(query + " WHERE " + filtro_arquivado + " ORDER BY titulo" + " LIMIT ?, ?", offset, LIVROS_POR_PAGINA)
+        search_size = len(db.execute(query + " WHERE " + filtro_arquivado))
 
-        # adiciona filtro ao dicionário se houver request
-        filtro_titulo = request.args.get('filtro-titulo')
-        if filtro_titulo:
-            filtros_placeholder["titulo"] = filtro_titulo
-            filtros["titulo"] = "%" + filtro_titulo + "%"
-
-        filtro_autor = request.args.get('filtro-autor')
-        if filtro_autor:
-            filtros_placeholder["autor"] = filtro_autor
-            filtros["autor"] = "%" + filtro_autor + "%"
-
-        filtro_ano = request.args.get("filtro-ano")
-        if filtro_ano:
-            filtros_placeholder["ano"] = filtro_ano
-            filtros["ano"] = "%" + filtro_ano + "%"
-
-        filtro_editora = request.args.get("filtro-editora")
-        if filtro_editora:
-            filtros_placeholder["editora"] = filtro_editora
-            filtros["editora"] = "%" + filtro_editora + "%"
-
-        filtro_arquivado = " id IN (SELECT id FROM acervo WHERE status != 'ARQUIVADO')"
-        if request.args.get('mostrar-arquivados') == 'true':
-            filtro_arquivado = " id IN (SELECT id FROM acervo WHERE status = 'DISPONIVEL' OR status = 'EMPRESTADO' OR status = 'ARQUIVADO')"
-
-        
-        # prepara dados para paginação
-        LIVROS_POR_PAGINA = 50
-        pagina_atual = int(request.args.get("pagina", 0))
-        offset = LIVROS_POR_PAGINA * pagina_atual        
-
-        
-        # prepara query base
-        query = "SELECT * FROM acervo"
-        # adiciona filtros existentes
-        if filtros:
-            query += " WHERE " + " AND ".join([f"{key} LIKE ?" for key in filtros])
-            acervo = db.execute(query + " AND " + filtro_arquivado + " ORDER BY titulo" + " LIMIT ?, ?", *tuple(filtros.values()), offset, LIVROS_POR_PAGINA)
-            search_size = len(db.execute(query + " AND " + filtro_arquivado + " ORDER BY titulo", *tuple(filtros.values())))
-        # caso não haja filtros, roda query base
-        else:
-            acervo = db.execute(query + " WHERE " + filtro_arquivado + " ORDER BY titulo" + " LIMIT ?, ?", offset, LIVROS_POR_PAGINA)
-            search_size = len(db.execute(query + " WHERE " + filtro_arquivado))
-
-        # prepara dicionário para ser usado no HTML
-        page_data = {
-            "search_size":search_size,
-            "atual":pagina_atual,
-            "max":int(search_size/LIVROS_POR_PAGINA)
-        }
-        return render_template("acervo/index.html", acervo=acervo, edited_book=edited_book, filtros=filtros_placeholder, page_data=page_data)
+    # prepara dicionário para ser usado no HTML
+    page_data = {
+        "search_size":search_size,
+        "atual":pagina_atual,
+        "max":int(search_size/LIVROS_POR_PAGINA)
+    }
+    return render_template("acervo/index.html", acervo=acervo, edited_book=edited_book, filtros=filtros_placeholder, page_data=page_data)
 
 @app.route("/acervo/incluir", methods=["GET", "POST"])
 @login_required
@@ -277,6 +245,39 @@ def acervo_incluir():
         return redirect(url_for("/acervo"))       
     else:
         return render_template("acervo/incluir.html")
+
+@app.route("/acervo/editar", methods=["GET", "POST"])
+@login_required
+def acervo_editar():
+    if request.method == "POST":
+        # handles arquivamento do banco de dados
+        if archive_request := request.form.get('delete-id'):
+            db.execute("UPDATE acervo SET status = 'ARQUIVADO' WHERE id = ?", archive_request)
+            flash("Status da obra atualizado com sucesso", "warning")
+            return redirect("/acervo")
+        
+        id = request.form.get('book-id')
+        print("id is = ", id)
+        titulo = request.form.get('titulo')
+        autor = request.form.get('autor')
+        editora = request.form.get('editora')
+        ano = request.form.get('ano')
+        status = request.form.get('status')
+        # atualiza banco de dados
+        print(id, titulo, autor, editora, ano, status)
+        db.execute("UPDATE acervo SET titulo = ?, autor = ?, editora = ?, ano = ?, status = ? WHERE id = ?", titulo, autor, editora, ano, status, id)
+        
+        flash("A obra foi editada com sucesso!", "success")
+        return redirect("/acervo")
+    # MÉTODO "GET"
+    else:
+        if edited_book := db.execute("SELECT * FROM acervo WHERE id = ?", request.args.get('edit-book'))[0]:
+            return render_template("/acervo/editar.html", edited_book=edited_book)
+        else:
+            flash('Error', 'danger')
+            return redirect("/acervo")
+    
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
