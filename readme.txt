@@ -1,0 +1,1 @@
+Urubooks é um sistema web desenvolvido para gerir o modelo de assinatura do Seburubu.

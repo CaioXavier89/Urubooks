@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Incluir
+{% endblock %}
+
+{% block main %}
+<h3 class='mb-3'>Incluir livro</h3>
+
+<div id="input-group">
+    <form id="incluir" action="/incluir" method="post">
+        <div class="input-group mb-3">
+            <span class="input-group-text">Título</span>
+            <input name="titulo" type="text" class="form-control" autocomplete="off">
+        </div>
+        <div class="input-group mb-3">
+            <span class="input-group-text">Autor</span>
+            <input name="autor" type="text" class="form-control" autocomplete="off">
+        </div>
+        <div class="input-group mb-3">
+            <span class="input-group-text">Ano</span>
+            <input name="ano" type="text" class="form-control" autocomplete="off">
+        </div>
+        <div class="input-group mb-3">
+            <span class="input-group-text">Editora</span>
+            <input name="editora" type="text" class="form-control" autocomplete="off">
+        </div>
+        <button type='submit' class="btn btn-light">Incluir</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Home
+{% endblock %}
+
+{% block main %}
+<div class="container">
+    <span class="dashboard-info border-danger rounded-circle text-center mx-3 my-1">Acervo<br><h3>{{ acervo }}</h2></span>
+    <span class="dashboard-info border-danger rounded-circle text-center mx-3 my-1">Assinantes<br><h3>{{ usuarios }}</h2></span>
+</div>
+{% endblock %}
