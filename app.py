@@ -2,7 +2,7 @@ import os
 
 from cs50 import SQL
 from datetime import date
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -49,8 +49,52 @@ def index():
 @app.route("/usuarios")
 @login_required
 def usuarios():
-    return render_template("usuarios/index.html")
+    CONTATOS_POR_PAGINA = 20
+    pagina = request.args.get("pagina", 0)
+    offset = CONTATOS_POR_PAGINA * pagina  
+    contatos = db.execute("SELECT * FROM contatos LIMIT ?, ?", offset, CONTATOS_POR_PAGINA)
+    page_data = {
+    "atual":int(pagina),
+    "max":int(len(contatos)/CONTATOS_POR_PAGINA),
+    }
+    return render_template("usuarios/index.html", contatos=contatos, page_data=page_data)
 
+
+@app.route("/usuarios/detalhes", methods=["POST", "GET"])
+@login_required
+def usuarios_detalhes():
+    if request.method == "POST":
+        # FAZER EXCLUSÃO DO CONTATO DO DB
+        if deletar_cpf := request.form.get("delete-id"):
+            db.execute("DELETE FROM contatos WHERE cpf = ?", deletar_cpf)
+            flash("Usuário deletado do banco de dados", "success")
+            return redirect("/usuarios")
+
+        # FAZER EDIÇÃO DO CONTATO
+        nome = request.form.get("nome")
+        cpf = request.form.get("cpf")
+        telefone = request.form.get("telefone")
+        endereço = request.form.get("endereço")
+        email = request.form.get("email")
+
+        if nome and cpf and telefone and endereço and email:
+            db.execute("UPDATE contatos SET nome = ?, cpf = ?, telefone = ?, endereço= ?, email = ? WHERE cpf = ?", nome, cpf, telefone, endereço, email, cpf)
+            flash("Contato editado com sucesso", "success")
+            return redirect("/usuarios")
+        else:
+            flash("Erro", "danger")
+            return redirect("/usuarios")
+
+
+    # MÉTODO GET
+    else:
+        if request.args.get("detalhar"):
+            contato = db.execute("SELECT * FROM contatos WHERE cpf = ?", request.args.get("detalhar"))[0]
+        else:
+            flash("Erro", "danger")
+            return redirect("/")
+        
+        return render_template("usuarios/detalhes.html", contato=contato)
 
 @app.route("/history")
 @login_required
@@ -133,11 +177,14 @@ def usuarios_cadastro():
         # handles cpf input
         cpf = request.form.get('cpf').replace("-", "").replace(".", "")
         if len(cpf) != 11:
-            return apology("Formato de CPF inválido")
+            flash("Formato de CPF inválido")
+            return redirect("/usuarios")
         try:
-            cpf = int(cpf)
-        except:
-            return apology("Formato de CPF inválido")
+            int(cpf)
+        except ValueError:
+            flash("Formato de CPF inválido")
+            return redirect("/usuarios")
+
         consulta_cpf = db.execute(
         "SELECT * FROM contatos WHERE cpf = ?", cpf
         )
@@ -240,11 +287,16 @@ def acervo_incluir():
         editora = request.form.get('editora')
         ano = request.form.get('ano')
 
+        if db.execute('SELECT * FROM acervo WHERE titulo = ?, autor = ?, editora = ?, ano = ?', titulo, autor, editora, ano):
+            flash("Esse livro já existe no acervo", "warning")
+            return render_template("acervo/incluir.html")
+
         db.execute('INSERT INTO acervo (titulo, autor, editora, ano, status) VALUES (?, ?, ?, ?, "DISPONIVEL")', titulo, autor, editora, ano)
         flash("Livro cadastrado", "success")
-        return redirect(url_for("/acervo"))       
+        return redirect("/acervo")       
     else:
         return render_template("acervo/incluir.html")
+
 
 @app.route("/acervo/editar", methods=["GET", "POST"])
 @login_required
@@ -257,18 +309,20 @@ def acervo_editar():
             return redirect("/acervo")
         
         id = request.form.get('book-id')
-        print("id is = ", id)
         titulo = request.form.get('titulo')
         autor = request.form.get('autor')
         editora = request.form.get('editora')
         ano = request.form.get('ano')
         status = request.form.get('status')
         # atualiza banco de dados
-        print(id, titulo, autor, editora, ano, status)
-        db.execute("UPDATE acervo SET titulo = ?, autor = ?, editora = ?, ano = ?, status = ? WHERE id = ?", titulo, autor, editora, ano, status, id)
-        
-        flash("A obra foi editada com sucesso!", "success")
-        return redirect("/acervo")
+        if id and titulo and autor and editora and ano and status:
+            db.execute("UPDATE acervo SET titulo = ?, autor = ?, editora = ?, ano = ?, status = ? WHERE id = ?", titulo, autor, editora, ano, status, id)
+            flash("A obra foi editada com sucesso!", "success")
+            return redirect("/acervo")
+        else:
+            flash("Erro", "danger")
+            return redirect("/acervo")
+
     # MÉTODO "GET"
     else:
         if edited_book := db.execute("SELECT * FROM acervo WHERE id = ?", request.args.get('edit-book'))[0]:
