@@ -40,7 +40,49 @@
 
 <div class="input-group-container mt-2">
     <h5 class='mb-3'>Empréstimos</h3>
-    <div>Não há empréstimos para esse usuário.</div>
+        {% if emprestimos %}
+        <table class="table table-striped">
+            <thead>
+                <th>Livro</th>
+                <th>Autor</th>
+                <th>Editora</th>
+                <th>Ano</th>
+                <th>Data</th>
+                <th>Prazo</th>
+                <th></th>
+            </thead>
+            <tbody>
+                {% for livro in emprestimos %}
+                <tr>
+                    <td>{{ livro.titulo }}</td>
+                    <td>{{ livro.autor }}</td>
+                    <td>{{ livro.editora }}</td>
+                    <td>{{ livro.ano }}</td>
+                    <td>{{ livro.data }}</td>
+                    {% if livro.atrasado == "true" %}
+                        <td style="color:red"><b>{{ livro.prazo }}<b></td>
+                    {% else %}
+                        <td style="color:green"><b>{{ livro.prazo }}<b></td>
+                    {% endif %}
+                    <td>
+                        <form action="/devolver" method="post">
+                            <input name="book-id" type="hidden" value="{{ livro.id }}">
+                            <input name="user-id" type="hidden" value="{{ contato.cpf }}">
+                            <button style="border-style: none" type="submit">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#B01F00" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+                                </svg>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <div>Não há empréstimos para esse usuário.</div>
+        {% endif %}
 </div>
 
 <div class="input-group-container mt-2">

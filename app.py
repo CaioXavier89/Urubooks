@@ -89,13 +89,23 @@ def usuarios_detalhes():
 
     # MÉTODO GET
     else:
-        if request.args.get("detalhar"):
-            contato = db.execute("SELECT * FROM contatos WHERE cpf = ?", request.args.get("detalhar"))[0]
+        user_cpf = request.args.get("detalhar")
+        if user_cpf:
+            contato = db.execute("SELECT * FROM contatos WHERE cpf = ?", user_cpf)[0]
+            emprestimos = db.execute(
+                "SELECT * FROM acervo JOIN emprestimos on acervo.id = emprestimos.obra_id WHERE acervo.id IN (SELECT obra_id FROM emprestimos WHERE contato_cpf = ?)", user_cpf
+                )
+            hoje = date.today()
+            for row in emprestimos:
+                if hoje > date.fromisoformat(row["prazo"]):
+                    row["atrasado"] = "true"
+                else:
+                    row["atrasado"] = "false"
         else:
-            flash("Erro", "danger")
+            flash("Usuário não encontrado", "danger")
             return redirect("/")
         
-        return render_template("usuarios/detalhes.html", contato=contato)
+        return render_template("usuarios/detalhes.html", contato=contato, emprestimos=emprestimos, hoje=hoje)
 
 @app.route("/history")
 @login_required
@@ -138,6 +148,27 @@ def emprestar():
                 "cpf":"",
             }
         return render_template("emprestar.html", livro=livro, usuario=usuario, data=data)
+
+
+@app.route("/devolver", methods=["POST"])
+def devolver():
+    obra_id = request.form.get("book-id")
+    contato_cpf = request.form.get("user-id")
+    data = date.today()
+
+    if obra_id and contato_cpf:
+        db.execute("DELETE FROM emprestimos WHERE obra_id = ? AND contato_cpf = ?", obra_id, contato_cpf)
+        # adicionar entrada no histórico
+        db.execute("INSERT INTO historico (obra_id, contato_cpf, data, operacao) VALUES (?, ?, ?, 'DEVOLUÇAO')", obra_id, contato_cpf, data)
+        # checar se mais alguém tem aquela obra emprestada, caso negativo mudar status da obra para disponível
+        if len(db.execute("SELECT * FROM emprestimos WHERE obra_id = ?", obra_id)) == 0:
+            db.execute("UPDATE acervo SET status = 'DISPONIVEL' WHERE id = ?", obra_id)
+
+        flash("Obra devolvida com sucesso", "success")
+        return redirect("/")
+    
+    flash("Não foi possível realizar a devolução", "danger")
+    return redirect("/")
 
 
 @app.route("/login", methods=["GET", "POST"])

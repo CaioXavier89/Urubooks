@@ -37,9 +37,13 @@
                 </div>
             </div>
             <div class="row justify-content-md-center">
-                <div class="col-auto ustify-content-start mr-2">
-                        <input name="mostrar-arquivados" id="archived-checkbox" type="checkbox" autocomplete="off" value="true">
-                        <label for="archived-checkbox">Mostrar Arquivados</label>
+                <div class="col-auto">
+                    <div class="input-group mb-3">
+                        <div class="input-group-text">
+                            <input class="form-check-input" name="mostrar-arquivados" id="archived-checkbox" type="checkbox" autocomplete="off" value="true">
+                        </div>
+                        <input type="text" class="form-control" value="Mostrar arquivados" style="background-color: white" disabled>
+                    </div>
                 </div>
                 <div class="col-auto">
                     <button type='submit' class="btn btn-light btn-border">Filtrar</button>
