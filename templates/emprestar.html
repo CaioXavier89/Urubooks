@@ -1,8 +1,94 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Emprestar
+    Empréstimo
 {% endblock %}
 
 {% block main %}
+<h3 class='mb-3'>Emprestar</h3>
+<div class="input-group-container mt-2">
+    <h5 class='mb-3'>Livro</h5>
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="input-group mb-3">
+                <span class="input-group-text">Título</span>
+                <input name="titulo" type="text" class="form-control" autocomplete="off" value="{{ livro.titulo }}" disabled>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="input-group mb-3">
+                <span class="input-group-text">Autor</span>
+                <input name="autor" type="text" class="form-control" autocomplete="off" value="{{ livro.autor }}" disabled>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="input-group mb-3">
+                <span class="input-group-text">Id</span>
+                <input name="id" type="text" class="form-control" autocomplete="off" value="{{ livro.id }}" disabled>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="input-group mb-3">
+                <span class="input-group-text">Ano</span>
+                <input name="ano" type="text" class="form-control" autocomplete="off" value="{{ livro.ano }}" disabled>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="input-group mb-3">
+                <span class="input-group-text">Editora</span>
+                <input name="editora" type="text" class="form-control" autocomplete="off" value="{{ livro.editora }}" disabled>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="input-group-container mt-2">
+    <h5 class='mb-3'>Usuário</h3>
+        <form action="/emprestar" method="get">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">CPF</span>
+                        <input name="book-id" type="hidden" value="{{ livro.id }}">
+                        <input name="user-id" type="text" class="form-control" autocomplete="off" value="{{ usuario.cpf }}">
+                        <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Procurar</button>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Nome</span>
+                        <input name="autor" type="text" class="form-control" autocomplete="off" value="{{ usuario.nome }}" disabled>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+            {% if usuario.nome %}
+            <form action="/emprestar" method="post">
+                <div class="input-group-container mt-2">
+                    <h5 class='mb-3'>Duração</h5>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">Data</span>
+                                <input name="data" type="text" class="form-control" autocomplete="off" value="{{ data.hoje }}" disabled>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">Prazo</span>
+                                <input name="prazo" type="text" class="form-control" autocomplete="off" value="{{ data.prazodefault }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <input type="hidden" name="user-id" value="{{ usuario.cpf }}">
+                        <input type="hidden" name="book-id" value="{{ livro.id }}">
+                        <button type="submit" class="btn btn-light btn-border">Emprestar</button>
+                    </div>
+                </div>
+            </form>
+            {% endif %}
+
 {% endblock %}

@@ -7,8 +7,8 @@
 {% block main %}
 <h3 class='mb-3'>Detalhes de usuário</h3>
 
-<div id="input-group">
-    <h5 class='mb-3'>{{ contato.nome }}</h3>
+<div class="input-group-container">
+    <h5 class='mb-3'>Dados de cadastro</h3>
     <form id="edit-contato" action="/usuarios/detalhes" method="post">
         <div class="input-group mb-3">
             <span class="input-group-text">Nome</span>
@@ -33,20 +33,31 @@
     </form>
         <div class="row justify-content-md-center">
             <div class="col-auto">
-                <button type='submit' form="edit-contato" class="btn btn-light btn-border">Editar</button>    
-            </div>
-            <div class="col-auto">
-                <form action="/usuarios/detalhes" method="post" onsubmit="return showWarning()">
-                    <input name="delete-id" value="{{ contato.cpf }}" type="hidden">
-                    <button class="btn btn-danger" type="submit">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
-                            <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
-                          </svg> Deletar
-                    </button>
-                </form>
+                <button type='submit' form="edit-contato" class="btn btn-light btn-border">Atualizar</button>    
             </div>
         </div>
 </div>
+
+<div class="input-group-container mt-2">
+    <h5 class='mb-3'>Empréstimos</h3>
+    <div>Não há empréstimos para esse usuário.</div>
+</div>
+
+<div class="input-group-container mt-2">
+    <h5 class='mb-3'>Assinatura</h3>
+    <div>Nenhuma assinatura ativa.</div>
+</div>
+<div class="col-auto mt-4">
+    <form action="/usuarios/detalhes" method="post" onsubmit="return showWarning()">
+        <input name="delete-id" value="{{ contato.cpf }}" type="hidden">
+        <button class="btn btn-danger" type="submit">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
+                <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
+              </svg> Deletar
+        </button>
+    </form>
+</div>
+
 <script>
     function showWarning() {
         var result = confirm("Deseja mesmo deletar o usuário do banco de dados?");

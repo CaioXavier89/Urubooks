@@ -1,10 +1,11 @@
 import os
 
 from cs50 import SQL
-from datetime import date
-from flask import Flask, flash, redirect, render_template, request, session, url_for, jsonify
+from datetime import date, timedelta
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
+import ast
 
 
 from helpers import apology, login_required
@@ -104,16 +105,39 @@ def history():
 @app.route("/emprestar", methods=["GET", "POST"])
 @login_required
 def emprestar():
+    # O método POST faz as operações de inclusão do empréstimo no banco de dados e no histórico
     if request.method == "POST":
-        livro = request.method.get("livro_id")
-        contato = request.method.get("contato_id")
+        obra_id = request.form.get("book-id")
+        contato_cpf = request.form.get("user-id")
+        data = date.today()
+        prazo = request.form.get("prazo")
 
-        db.execute()
-        db.execute()
+        db.execute("INSERT INTO emprestimos (obra_id, contato_cpf, data, prazo) VALUES (?, ?, ?, ?)", obra_id, contato_cpf, data, prazo)
+        db.execute("INSERT INTO historico (obra_id, contato_cpf, data, operacao) VALUES (?, ?, ?, 'EMPRESTIMO')", obra_id, contato_cpf, data)
+        db.execute("UPDATE acervo SET status = 'EMPRESTADO' WHERE id = ?", obra_id)
+        
         flash('Empréstimo cadastrado', 'success')
         return redirect('/')
+    
+    # MÉTODO GET
+    # O método get é utilizado para disponibilizar e popular os formulários antes de ser enviado para o banco de dado
     else:
-        return render_template("emprestar.html")
+        PRAZO_DEFAULT = 15
+        data = {
+            "hoje": date.today(),
+            "prazodefault": date.today() + timedelta(days=PRAZO_DEFAULT),
+        }
+        if livro := db.execute("SELECT * FROM acervo WHERE id = ?", request.args.get("book-id")):
+            livro = livro[0]
+
+        if usuario := db.execute("SELECT * FROM contatos WHERE cpf = ?", request.args.get("user-id")):
+            usuario = usuario[0]
+        else:
+            usuario = {
+                "nome":"",
+                "cpf":"",
+            }
+        return render_template("emprestar.html", livro=livro, usuario=usuario, data=data)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -308,6 +332,8 @@ def acervo_editar():
             flash("Status da obra atualizado com sucesso", "warning")
             return redirect("/acervo")
         
+        previous_data = ast.literal_eval(request.form.get("previous_data"))
+        
         id = request.form.get('book-id')
         titulo = request.form.get('titulo')
         autor = request.form.get('autor')
@@ -315,12 +341,13 @@ def acervo_editar():
         ano = request.form.get('ano')
         status = request.form.get('status')
         # atualiza banco de dados
-        if id and titulo and autor and editora and ano and status:
-            db.execute("UPDATE acervo SET titulo = ?, autor = ?, editora = ?, ano = ?, status = ? WHERE id = ?", titulo, autor, editora, ano, status, id)
-            flash("A obra foi editada com sucesso!", "success")
+
+        if titulo == previous_data["titulo"] and autor == previous_data["autor"] and editora == previous_data["editora"] and ano == str(previous_data["ano"]) and status == previous_data["status"]:
+            flash("Não houve alterações na obra", "info")
             return redirect("/acervo")
         else:
-            flash("Erro", "danger")
+            db.execute("UPDATE acervo SET titulo = ?, autor = ?, editora = ?, ano = ?, status = ? WHERE id = ?", titulo, autor, editora, ano, status, id)
+            flash("A obra foi editada com sucesso!", "success")
             return redirect("/acervo")
 
     # MÉTODO "GET"
