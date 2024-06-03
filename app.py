@@ -159,7 +159,7 @@ def devolver():
     if obra_id and contato_cpf:
         db.execute("DELETE FROM emprestimos WHERE obra_id = ? AND contato_cpf = ?", obra_id, contato_cpf)
         # adicionar entrada no histórico
-        db.execute("INSERT INTO historico (obra_id, contato_cpf, data, operacao) VALUES (?, ?, ?, 'DEVOLUÇAO')", obra_id, contato_cpf, data)
+        db.execute("INSERT INTO historico (obra_id, contato_cpf, data, operacao) VALUES(?, ?, ?, 'DEVOLUÇAO')", obra_id, contato_cpf, data.isoformat())
         # checar se mais alguém tem aquela obra emprestada, caso negativo mudar status da obra para disponível
         if len(db.execute("SELECT * FROM emprestimos WHERE obra_id = ?", obra_id)) == 0:
             db.execute("UPDATE acervo SET status = 'DISPONIVEL' WHERE id = ?", obra_id)
@@ -383,10 +383,27 @@ def acervo_editar():
 
     # MÉTODO "GET"
     else:
-        if edited_book := db.execute("SELECT * FROM acervo WHERE id = ?", request.args.get('edit-book'))[0]:
-            return render_template("/acervo/editar.html", edited_book=edited_book)
+        obra_id = request.args.get("edit-book")
+        edited_book = db.execute("SELECT * FROM acervo WHERE id = ?", obra_id)
+
+        emprestimos = db.execute(
+            "SELECT * FROM contatos JOIN emprestimos on contatos.cpf = emprestimos.contato_cpf WHERE contatos.cpf IN \
+            (SELECT contato_cpf FROM emprestimos WHERE obra_id = ?)", obra_id
+            )
+            
+        hoje = date.today()
+        for row in emprestimos:
+            if hoje > date.fromisoformat(row["prazo"]):
+                row["atrasado"] = "true"
+            else:
+                row["atrasado"] = "false"
+
+        if edited_book:
+            edited_book = edited_book[0]
+            
+            return render_template("/acervo/editar.html", edited_book=edited_book, emprestimos=emprestimos)
         else:
-            flash('Error', 'danger')
+            flash('Erro', 'danger')
             return redirect("/acervo")
     
     
