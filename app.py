@@ -405,8 +405,22 @@ def acervo_editar():
         else:
             flash('Erro', 'danger')
             return redirect("/acervo")
-    
-    
+
+@app.route("/historico")
+@login_required
+def historico():
+    REGISTRO_POR_PAGINA = 30
+    pagina = int(request.args.get("pagina", 0))
+    offset = REGISTRO_POR_PAGINA * pagina
+    historico = db.execute("SELECT * FROM historico JOIN acervo on historico.obra_id = acervo.id \
+                           JOIN contatos on historico.contato_cpf = contatos.cpf LIMIT ?, ?",
+                           offset, REGISTRO_POR_PAGINA)
+    page_data = {
+        "atual":pagina,
+        "max":int(len(historico)/REGISTRO_POR_PAGINA),
+    }
+    return render_template("historico.html", historico=historico, page_data=page_data)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

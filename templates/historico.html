@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Histórico
+{% endblock %}
+
+{% block main %}
+    <h3 class='mb-3'>Histórico</h3>
+    <table class='table table-bordered table-striped' style='text-align:start'>
+        <thead class="table-dark">
+            <th>Data</th>
+            <th>Nome</th>
+            <th>Cpf</th>
+            <th>Operação</th>
+            <th>Titulo</th>
+            <th>Id da obra</th>
+        </thead>
+        <tbody>
+        {% if historico %}
+        {% for registro in historico %}
+            {% set trclass = 'table-danger' if registro.operacao == 'EMPRESTIMO' else 'table-success' %}
+            <tr class="{{ trclass }}">
+                <td>{{ registro.data }}</td>
+                <td>{{ registro.nome }}</td>
+                <td>{{ registro.cpf }}</td>
+                <td>{{ registro.operacao }}</td>
+                <td>{{ registro.titulo }}</td>
+                <td>{{ registro.id }}</td>
+            </tr>
+            {% endfor %}
+        {% endif %}
+        </tbody>
+    </table>
+    <div class="container">
+        <div class="row justify-content-md-center align-items-center">
+            {% if page_data.atual > 0 %}
+                <div class="col-auto">
+                    <form action="/historico" method="get">
+                        <input name="pagina" type="hidden" value="{{ page_data.atual - 1 }}">
+                        <button class="btn btn-light btn-border" type="submit">&lt;&lt; Anterior</button>
+                    </form>
+                </div>
+            {% endif %}
+            {% if page_data.max > 0 %}
+            <div class="col-auto">
+                pág. {{ page_data.atual }}/{{ page_data.max }}
+            </div>
+            {% endif %}
+    
+            {% if page_data.atual < page_data.max and page_data.max > 0 %}
+                <div class="col-auto">
+                    <form action="/historico" method="get">
+                        <input name="pagina" type="hidden" value="{{ page_data.atual + 1 }}">
+                        <button class="btn btn-light btn-border" type="submit">Próxima &gt;&gt;</button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock %}
