@@ -17,17 +17,19 @@
         </thead>
         <tbody>
         {% if historico %}
-        {% for registro in historico %}
-            {% set trclass = 'table-danger' if registro.operacao == 'EMPRESTIMO' else 'table-success' %}
-            <tr class="{{ trclass }}">
-                <td>{{ registro.data }}</td>
-                <td>{{ registro.nome }}</td>
-                <td>{{ registro.cpf }}</td>
-                <td>{{ registro.operacao }}</td>
-                <td>{{ registro.titulo }}</td>
-                <td>{{ registro.id }}</td>
-            </tr>
-            {% endfor %}
+            {% for registro in historico %}
+                {% set trclass = 'table-danger' if registro.operacao == 'EMPRESTIMO' else 'table-success' %}
+                <tr class="{{ trclass }}">
+                    <td>{{ registro.data }}</td>
+                    <td>{{ registro.nome }}</td>
+                    <td>{{ registro.cpf }}</td>
+                    <td>{{ registro.operacao }}</td>
+                    <td>{{ registro.titulo }}</td>
+                    <td>{{ registro.id }}</td>
+                </tr>
+                {% endfor %}
+        {% else %}
+            <tr></tr>
         {% endif %}
         </tbody>
     </table>

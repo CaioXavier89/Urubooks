@@ -31,9 +31,21 @@
         <div class="input-group mb-3">
             <span class="input-group-text">Status</span>
             <select name="status" type="text" class="form-control" autocomplete="off" required>
-                <option value="DISPONIVEL">DISPONIVEL</option>
+                {% if edited_book.status == 'DISPONIVEL' %}
+                    <option value="DISPONIVEL" selected>DISPONIVEL</option>
+                {% else %}
+                    <option value="DISPONIVEL">DISPONIVEL</option>
+                {% endif %}
+                {% if edited_book.status == 'ARQUIVADO' %}
+                <option value="ARQUIVADO" selected>ARQUIVADO</option>
+                {% else %}
                 <option value="ARQUIVADO">ARQUIVADO</option>
+                {% endif %}
+                {% if edited_book.status == 'EMPRESTADO' %}
+                <option value="EMPRESTADO" selected>EMPRESTADO</option>
+                {% else %}
                 <option value="EMPRESTADO">EMPRESTADO</option>
+                {% endif %}
             </select>
         </div>
     </form>
@@ -55,21 +67,21 @@
                 <th></th>
             </thead>
             <tbody>
-                {% for contato in emprestimos %}
+                {% for emprestimo in emprestimos %}
                 <tr>
-                    <td>{{ contato.cpf }}</td>
-                    <td>{{ contato.nome }}</td>
-                    <td>{{ contato.data }}</td>
-                    <td>{{ contato.prazo }}</td>
-                    {% if contato.atrasado == "true" %}
-                        <td style="color:red"><b>{{ contato.prazo }}<b></td>
+                    <td>{{ emprestimo.cpf }}</td>
+                    <td>{{ emprestimo.nome }}</td>
+                    <td>{{ emprestimo.data }}</td>
+                    <td>{{ emprestimo.prazo }}</td>
+                    {% if emprestimo.atrasado == "true" %}
+                        <td style="color:red"><b>{{ emprestimo.prazo }}<b></td>
                     {% else %}
-                        <td style="color:green"><b>{{ contato.prazo }}<b></td>
+                        <td style="color:green"><b>{{ emprestimo.prazo }}<b></td>
                     {% endif %}
                     <td>
                         <form action="/devolver" method="post">
-                            <input name="book-id" type="hidden" value="{{ edited_book.id }}">
-                            <input name="user-id" type="hidden" value="{{ contato.cpf }}">
+                            <input name="emprestimo-id" value="{{ emprestimo.id }}" type="hidden" >
+                            <input name="book-id" value="{{ emprestimo.obra_id }}" type="hidden" >
                             <button style="border-style: none" type="submit">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#B01F00" class="bi bi-x-circle" viewBox="0 0 16 16">
                                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -84,15 +96,15 @@
         </table>
         {% else %}
             <div>Não há empréstimos para essa obra.</div>
-            <div>
-                <form action="/emprestar" method="get">
-                    <input name="book-id" value="{{ edited_book.id }}" type='hidden'/>
-                    <button type='submit' class="btn btn-light btn-border mt-3">
-                        Emprestar
-                    </button>
-                </form>
-            </div>
         {% endif %}
+        <div>
+            <form action="/emprestar" method="get">
+                <input name="book-id" value="{{ edited_book.id }}" type='hidden'/>
+                <button type='submit' class="btn btn-light btn-border mt-3">
+                    Emprestar
+                </button>
+            </form>
+        </div>
 </div>
 <div class="col-auto mt-4">
     <form action="/acervo/editar" method="post" onsubmit="return showWarning()">

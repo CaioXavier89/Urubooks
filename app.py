@@ -8,7 +8,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import ast
 
 
-from helpers import apology, login_required
+from helpers import login_required
 
 # Configure application
 app = Flask(__name__)
@@ -91,12 +91,14 @@ def usuarios_detalhes():
 
     # MÉTODO GET
     else:
-        user_cpf = request.args.get("detalhar")
-        if user_cpf:
+        if user_cpf := request.args.get("detalhar"):
             contato = db.execute("SELECT * FROM contatos WHERE cpf = ?", user_cpf)[0]
             emprestimos = db.execute(
-                "SELECT * FROM acervo JOIN emprestimos on acervo.id = emprestimos.obra_id WHERE acervo.id IN (SELECT obra_id FROM emprestimos WHERE contato_cpf = ?)", user_cpf
-                )
+                        "SELECT emprestimos.id, emprestimos.obra_id, emprestimos.contato_cpf,\
+                        emprestimos.prazo, emprestimos.data,\
+                        acervo.titulo, acervo.autor, acervo.editora, acervo.ano, acervo.status\
+                        FROM emprestimos JOIN acervo ON emprestimos.obra_id = acervo.id\
+                    WHERE emprestimos.contato_cpf = ?", user_cpf)
             hoje = date.today()
             for row in emprestimos:
                 if hoje > date.fromisoformat(row["prazo"]):
@@ -127,7 +129,6 @@ def emprestar():
         prazo = request.form.get("prazo")
 
         db.execute("INSERT INTO emprestimos (obra_id, contato_cpf, data, prazo) VALUES (?, ?, ?, ?)", obra_id, contato_cpf, data, prazo)
-        db.execute("INSERT INTO historico (obra_id, contato_cpf, data, operacao) VALUES (?, ?, ?, 'EMPRESTIMO')", obra_id, contato_cpf, data)
         db.execute("UPDATE acervo SET status = 'EMPRESTADO' WHERE id = ?", obra_id)
         
         flash('Empréstimo cadastrado', 'success')
@@ -157,22 +158,21 @@ def emprestar():
 @app.route("/devolver", methods=["POST"])
 def devolver():
     obra_id = request.form.get("book-id")
-    contato_cpf = request.form.get("user-id")
-    data = date.today()
+    emprestimo_id = request.form.get("emprestimo-id")
 
-    if obra_id and contato_cpf:
-        db.execute("DELETE FROM emprestimos WHERE obra_id = ? AND contato_cpf = ?", obra_id, contato_cpf)
-        # adicionar entrada no histórico
-        db.execute("INSERT INTO historico (obra_id, contato_cpf, data, operacao) VALUES(?, ?, ?, 'DEVOLUÇAO')", obra_id, contato_cpf, data.isoformat())
-        # checar se mais alguém tem aquela obra emprestada, caso negativo mudar status da obra para disponível
+    if obra_id and emprestimo_id:
+        db.execute("DELETE FROM emprestimos WHERE id = ?", emprestimo_id)
+        # TODO adicionar entrada no histórico
+        
+        # checar se a obra está emprestada a alguém, caso negativo mudar status da obra para disponível
         if len(db.execute("SELECT * FROM emprestimos WHERE obra_id = ?", obra_id)) == 0:
             db.execute("UPDATE acervo SET status = 'DISPONIVEL' WHERE id = ?", obra_id)
 
         flash("Obra devolvida com sucesso", "success")
         return redirect("/")
-    
-    flash("Não foi possível realizar a devolução", "danger")
-    return redirect("/")
+    else:
+        flash("Não foi possível realizar a devolução", "danger")
+        return redirect("/")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -183,11 +183,13 @@ def login():
     if request.method == "POST":
         # Ensure username was submitted
         if not request.form.get("username"):
-            return apology("must provide username", 403)
+            flash("Preencha o campo de login", "danger")
+            return redirect("/")
 
         # Ensure password was submitted
         elif not request.form.get("password"):
-            return apology("must provide password", 403)
+            flash("Preencha o campo de senha", "danger")
+            return redirect("/")
 
         # Query database for username
         rows = db.execute(
@@ -198,7 +200,8 @@ def login():
         if len(rows) != 1 or not check_password_hash(
             rows[0]["hash"], request.form.get("password")
         ):
-            return apology("invalid username and/or password", 403)
+            flash("Senha ou usuário inválidos", "danger")
+            return redirect("/login")
 
         # Remember which user has logged in
         session["user_id"] = rows[0]["id"]
@@ -231,7 +234,8 @@ def usuarios_cadastro():
         # handles nome input
         nome = request.form.get("nome")
         if not nome:
-            return apology("Nome necessário")
+            flash("Nome necessário", "danger")
+            return redirect("/usuarios")
         
         # handles cpf input
         cpf = request.form.get('cpf').replace("-", "").replace(".", "")
@@ -241,20 +245,21 @@ def usuarios_cadastro():
         try:
             int(cpf)
         except ValueError:
-            flash("Formato de CPF inválido")
+            flash("Formato de CPF inválido", 'danger')
             return redirect("/usuarios")
 
         consulta_cpf = db.execute(
         "SELECT * FROM contatos WHERE cpf = ?", cpf
         )
         if len(consulta_cpf) != 0:
-            return apology("Esse CPF já está cadastrado")
+            flash("Esse CPF já está cadastrado", 'danger')
+            return redirect("/usuarios")
         
         # handles telefone input
         telefone = request.form.get('telefone').replace("-", "").replace("(", "").replace(")", "")
         telefone = int(telefone)
         if not telefone:
-            return apology('Telefone necessário')
+            flash('Telefone necessário', 'danger')
         
         # handles e-mail
         email = request.form.get('e-mail')
@@ -379,7 +384,8 @@ def acervo_editar():
         status = request.form.get('status')
         # atualiza banco de dados
 
-        if titulo == previous_data["titulo"] and autor == previous_data["autor"] and editora == previous_data["editora"] and ano == str(previous_data["ano"]) and status == previous_data["status"]:
+        if titulo == previous_data["titulo"] and autor == previous_data["autor"]\
+            and editora == previous_data["editora"] and ano == str(previous_data["ano"]) and status == previous_data["status"]:
             flash("Não houve alterações na obra", "info")
             return redirect("/acervo")
         else:
@@ -420,7 +426,7 @@ def historico():
     pagina = int(request.args.get("pagina", 0))
     offset = REGISTRO_POR_PAGINA * pagina
     historico = db.execute("SELECT * FROM historico JOIN acervo on historico.obra_id = acervo.id \
-                           JOIN contatos on historico.contato_cpf = contatos.cpf ORDER BY historico.data LIMIT ?, ?",
+                           JOIN contatos on historico.contato_cpf = contatos.cpf ORDER BY historico.data DESC LIMIT ?, ?",
                            offset, REGISTRO_POR_PAGINA)
     page_data = {
         "atual":pagina,
