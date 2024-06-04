@@ -6,22 +6,30 @@
 
 {% block main %}
     <h3 class='mb-3'>Cadastrar usuário</h3>
-    <form action="/usuarios/cadastro" method="post">
-        <div class="mb-3">
-            Nome<input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="nome" placeholder="Nome" type="text" required>
-        </div>
-        <div class="mb-3">
-            CPF<input class="form-control mx-auto w-auto" name="cpf" placeholder="CPF" type="text" required>
-        </div>
-        <div class="mb-3">
-            Telefone<input class="form-control mx-auto w-auto" name="telefone" placeholder="Telefone" type="text" required>
-        </div>
-        <div class="mb-3">
-            E-mail<input class="form-control mx-auto w-auto" name="e-mail" placeholder="E-mail" type="email">
-        </div>
-        <div class="mb-3">
-            Endereço<input class="form-control mx-auto w-auto" name="endereço" placeholder="Endereço" type="text">
-        </div>
-        <button class="btn btn-primary" type="submit">Cadastrar</button>
-    </form>
+    <div class="input-group-container">
+        <h5 class='mb-3'>Dados de cadastro</h5>
+        <form action="/usuarios/cadastro" method="post">
+            <div class="input-group mb-3">
+                <span class="input-group-text">Nome</span>
+                <input name="nome" type="text" class="form-control" placeholder="Nome" autocomplete="off" required>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">CPF</span>
+                <input name="cpf" type="text" class="form-control" placeholder="CPF" autocomplete="off" required>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Telefone</span>
+                <input name="telefone" type="text" class="form-control" placeholder="Telefone" autocomplete="off" required>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">E-mail</span>
+                <input name="e-mail" type="text" class="form-control" placeholder="E-mail" autocomplete="off" required>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Endereço</span>
+                <input name="endereço" type="text" class="form-control" placeholder="Endereço" autocomplete="off">
+            </div>
+            <button class="btn btn-light btn-border" type="submit">Cadastrar</button>
+        </form>
+    </div>
 {% endblock %}

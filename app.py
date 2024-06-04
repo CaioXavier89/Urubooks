@@ -31,6 +31,7 @@ FLASH_STYLES = [
     "info",
 ]
 
+
 @app.after_request
 def after_request(response):
     """Ensure responses aren't cached"""
@@ -46,6 +47,7 @@ def index():
     acervo = db.execute('SELECT COUNT(*) FROM acervo')[0]['COUNT(*)']
     usuarios = db.execute('SELECT COUNT(*) FROM users')[0]['COUNT(*)']
     return render_template("index.html", acervo=acervo, usuarios=usuarios)
+
 
 @app.route("/usuarios")
 @login_required
@@ -107,10 +109,12 @@ def usuarios_detalhes():
         
         return render_template("usuarios/detalhes.html", contato=contato, emprestimos=emprestimos, hoje=hoje)
 
+
 @app.route("/history")
 @login_required
 def history():
     return render_template("history.html")
+
 
 @app.route("/emprestar", methods=["GET", "POST"])
 @login_required
@@ -266,6 +270,7 @@ def usuarios_cadastro():
     else:
         return render_template("usuarios/cadastro.html")
 
+
 @app.route("/acervo", methods=["GET", "POST"])
 @login_required
 def acervo(): 
@@ -332,6 +337,7 @@ def acervo():
         "max":int(search_size/LIVROS_POR_PAGINA)
     }
     return render_template("acervo/index.html", acervo=acervo, edited_book=edited_book, filtros=filtros_placeholder, page_data=page_data)
+
 
 @app.route("/acervo/incluir", methods=["GET", "POST"])
 @login_required
@@ -406,6 +412,7 @@ def acervo_editar():
             flash('Erro', 'danger')
             return redirect("/acervo")
 
+
 @app.route("/historico")
 @login_required
 def historico():
@@ -413,7 +420,7 @@ def historico():
     pagina = int(request.args.get("pagina", 0))
     offset = REGISTRO_POR_PAGINA * pagina
     historico = db.execute("SELECT * FROM historico JOIN acervo on historico.obra_id = acervo.id \
-                           JOIN contatos on historico.contato_cpf = contatos.cpf LIMIT ?, ?",
+                           JOIN contatos on historico.contato_cpf = contatos.cpf ORDER BY historico.data LIMIT ?, ?",
                            offset, REGISTRO_POR_PAGINA)
     page_data = {
         "atual":pagina,
