@@ -65,7 +65,8 @@
         </form>
     </div>
             {% if usuario.nome %}
-            <form action="/emprestar" method="post">
+            {% set alert = "return showWarningAss()" if usuario.assinante == "false" else '' %}
+            <form action="/emprestar" method="post" onsubmit="{{ alert }}">
                 <div class="input-group-container mt-2">
                     <h5 class='mb-3'>Duração</h5>
                     <div class="row">
@@ -85,10 +86,16 @@
                     <div>
                         <input type="hidden" name="user-id" value="{{ usuario.cpf }}">
                         <input type="hidden" name="book-id" value="{{ livro.id }}">
+
                         <button type="submit" class="btn btn-light btn-border">Emprestar</button>
                     </div>
                 </div>
             </form>
             {% endif %}
-
+<script>
+    function showWarningAss() {
+        var result = confirm("O usuário não é assinante. Emprestar assim mesmo?");
+        return result;
+    }
+</script>
 {% endblock %}

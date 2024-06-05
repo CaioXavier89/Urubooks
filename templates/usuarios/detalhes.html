@@ -40,36 +40,77 @@
 
 <div class="input-group-container mt-2">
     <h5 class='mb-3'>Empréstimos</h5>
-        {% if emprestimos %}
-        <table class="table table-striped">
+    {% if emprestimos %}
+    <table class="table table-striped">
+        <thead>
+            <th>Id</th>
+            <th>Titulo</th>
+            <th>Autor</th>
+            <th>Editora</th>
+            <th>Ano</th>
+            <th>Data</th>
+            <th>Prazo</td>
+            <th></th>
+        </thead>
+        <tbody>
+            {% for emprestimo in emprestimos %}
+            <tr>
+                <td>{{ emprestimo.obra_id }}</td>
+                <td>{{ emprestimo.titulo }}</td>
+                <td>{{ emprestimo.autor }}</td>
+                <td>{{ emprestimo.editora }}</td>
+                <td>{{ emprestimo.ano }}</td>
+                <td>{{ emprestimo.data }}</td>
+                {% if emprestimo.atrasado == "true" %}
+                    <td style="color:red"><b>{{ emprestimo.prazo }}<b></td>
+                {% else %}
+                    <td style="color:green"><b>{{ emprestimo.prazo }}<b></td>
+                {% endif %}
+                <td>
+                    <form action="/devolver" method="post">
+                        <input name="emprestimo-id" value="{{ emprestimo.id }}" type="hidden" >
+                        <input name="book-id" value="{{ emprestimo.obra_id }}" type="hidden" >
+                        <button style="border-style: none; background-color: inherit;" type="submit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#B01F00" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+                            </svg>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <div>Não há empréstimos para esse usuário.</div>
+    {% endif %}
+</div>
+
+<div class="input-group-container mt-2">
+    <h5 class='mb-3'>Assinatura</h5>
+    {% if assinaturas %}
+        <table class="table">
             <thead>
-                <th>Id</th>
-                <th>Titulo</th>
-                <th>Autor</th>
-                <th>Editora</th>
-                <th>Ano</th>
-                <th>Data</th>
-                <th>Prazo</td>
+                <th>Status</th>
+                <th>Plano</th>
+                <th>Data de início</th>
+                <th>Prazo</th>
                 <th></th>
             </thead>
             <tbody>
-                {% for emprestimo in emprestimos %}
-                <tr>
-                    <td>{{ emprestimo.obra_id }}</td>
-                    <td>{{ emprestimo.titulo }}</td>
-                    <td>{{ emprestimo.autor }}</td>
-                    <td>{{ emprestimo.editora }}</td>
-                    <td>{{ emprestimo.ano }}</td>
-                    <td>{{ emprestimo.data }}</td>
-                    {% if emprestimo.atrasado == "true" %}
-                        <td style="color:red"><b>{{ emprestimo.prazo }}<b></td>
-                    {% else %}
-                        <td style="color:green"><b>{{ emprestimo.prazo }}<b></td>
-                    {% endif %}
+                {% for assinatura in assinaturas %}
+                {% set trclass = "table-primary" if assinatura.vencida == "false" else "table-secondary" %}
+                {% set status = "ATIVA" if assinatura.vencida == "false" else "VENCIDA" %}
+                <tr class="{{ trclass }}">
+                    <td>{{ status }}</td>
+                    <td>{{ assinatura.plano }}</td>
+                    <td>{{ assinatura.data }}</td>
+                    <td>{{ assinatura.prazo }}</td>
                     <td>
-                        <form action="/devolver" method="post">
-                            <input name="emprestimo-id" value="{{ emprestimo.id }}" type="hidden" >
-                            <input name="book-id" value="{{ emprestimo.obra_id }}" type="hidden" >
+                        {% if assinatura.vencida == "false" %}
+                        <form action="/assinatura" method="post">
+                            <input name="deletar-assinatura" value="{{ assinatura.id }}" type="hidden">
                             <button style="border-style: none; background-color: inherit;" type="submit">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#B01F00" class="bi bi-x-circle" viewBox="0 0 16 16">
                                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -77,19 +118,42 @@
                                 </svg>
                             </button>
                         </form>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        {% else %}
-            <div>Não há empréstimos para esse usuário.</div>
-        {% endif %}
-</div>
-
-<div class="input-group-container mt-2">
-    <h5 class='mb-3'>Assinatura</h3>
+    {% else %}
     <div>Nenhuma assinatura ativa.</div>
+    {% endif %}
+    <div id="assinatura-container">
+        <form action="/assinatura" method="post">
+            <input name="user-id" type="hidden" value="{{ contato.cpf }}">
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Plano</span>
+                        <input name="plano" type="text" class="form-control" value="{{ plano_default }}" required>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Data</span>
+                        <input name="data" type="text" class="form-control" value="{{ hoje }}" disabled>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Prazo</span>
+                        <input name="prazo" type="text" autocomplete="off" class="form-control" value="{{ prazo_default }}">
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-light btn-border m-2" type="submit">Fazer assinatura</button>
+        </form>
+    </div>
+    <button class="btn btn-light btn-border m-2" onclick="showAssContainer(this)">Fazer assinatura</button>
 </div>
 <div class="col-auto mt-4">
     <form action="/usuarios/detalhes" method="post" onsubmit="return showWarning()">
@@ -97,7 +161,7 @@
         <button class="btn btn-danger" type="submit">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
                 <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
-              </svg> Deletar
+            </svg> Deletar
         </button>
     </form>
 </div>
@@ -106,6 +170,17 @@
     function showWarning() {
         var result = confirm("Deseja mesmo deletar o usuário do banco de dados?");
         return result;
+    }
+</script>
+<script>
+    function hideElement(element) {
+        element.style.display = 'none';
+    }
+
+    function showAssContainer(element) {
+        hideElement(element);
+        document.getElementById("assinatura-container").style.display='inline';
+            
     }
 </script>
 {% endblock %}

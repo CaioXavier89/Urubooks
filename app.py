@@ -30,7 +30,10 @@ FLASH_STYLES = [
     "warning",
     "info",
 ]
-
+PRAZO_EMPRESTIMO_DEFAULT = 15 # DIAS
+PRAZO_ASSINATURA_DEFAULT = 365 # DIAS
+PLANO_ASSINATURA_DEFAULT = "BÁSICO"
+HOJE = date.today()
 
 @app.after_request
 def after_request(response):
@@ -47,6 +50,76 @@ def index():
     acervo = db.execute('SELECT COUNT(*) FROM acervo')[0]['COUNT(*)']
     usuarios = db.execute('SELECT COUNT(*) FROM users')[0]['COUNT(*)']
     return render_template("index.html", acervo=acervo, usuarios=usuarios)
+
+
+@app.route("/assinatura", methods=["POST"])
+@login_required
+def assinatura():
+    if deletar := request.form.get("deletar-assinatura"):
+        db.execute("DELETE FROM assinaturas WHERE id = ?", deletar)
+        flash("Assinatura cancelada", "success")
+        return redirect("/usuarios")
+
+    contato_cpf = request.form.get("user-id")
+    plano = request.form.get("plano")
+    prazo = request.form.get("prazo")
+    if contato_cpf and plano and prazo:
+        db.execute("INSERT INTO assinaturas (contato_cpf, data, plano, prazo) VALUES (?, ?, ?, ?)", contato_cpf, HOJE.isoformat(), plano, prazo)
+        flash("Assinatura feita com sucesso.", "success")
+        return redirect("/")
+    else:
+        flash("Erro na assinatura", "danger")
+        return redirect("/")
+
+
+@app.route("/emprestar", methods=["GET", "POST"])
+@login_required
+def emprestar():
+    # O método POST faz as operações de inclusão do empréstimo no banco de dados e no histórico
+    if request.method == "POST":
+        obra_id = request.form.get("book-id")
+        contato_cpf = request.form.get("user-id")
+        prazo = request.form.get("prazo")
+
+        db.execute("INSERT INTO emprestimos (obra_id, contato_cpf, data, prazo) VALUES (?, ?, ?, ?)", obra_id, contato_cpf, HOJE, prazo)
+        db.execute("UPDATE acervo SET status = 'EMPRESTADO' WHERE id = ?", obra_id)
+        
+        flash('Empréstimo cadastrado', 'success')
+        return redirect('/')
+    
+    # MÉTODO GET
+    # O método get é utilizado para disponibilizar e popular os formulários antes de ser enviado para o banco de dado
+    else:
+        data = {
+            "hoje": HOJE,
+            "prazodefault": HOJE + timedelta(days=PRAZO_EMPRESTIMO_DEFAULT),
+        }
+        if livro := db.execute("SELECT * FROM acervo WHERE id = ?", request.args.get("book-id")):
+            livro = livro[0]
+
+        contato_cpf = request.args.get("user-id")
+        if usuario := db.execute("SELECT * FROM contatos WHERE cpf = ?", contato_cpf):
+            usuario = usuario[0]
+            assinaturas = db.execute("SELECT * FROM assinaturas WHERE contato_cpf = ?", contato_cpf)
+            for a in assinaturas:
+                if date.fromisoformat(a["prazo"]) > HOJE:
+                    usuario["assinante"] = "true"
+                    break
+            else:
+                usuario["assinante"] = "false"
+        
+        else:
+            usuario = {
+                "nome":"",
+                "cpf":"",
+            }
+        return render_template("emprestar.html", livro=livro, usuario=usuario, data=data)
+
+
+@app.route("/history")
+@login_required
+def history():
+    return render_template("history.html")
 
 
 @app.route("/usuarios")
@@ -99,60 +172,25 @@ def usuarios_detalhes():
                         acervo.titulo, acervo.autor, acervo.editora, acervo.ano, acervo.status\
                         FROM emprestimos JOIN acervo ON emprestimos.obra_id = acervo.id\
                     WHERE emprestimos.contato_cpf = ?", user_cpf)
-            hoje = date.today()
+            
             for row in emprestimos:
-                if hoje > date.fromisoformat(row["prazo"]):
+                if HOJE > date.fromisoformat(row["prazo"]):
                     row["atrasado"] = "true"
                 else:
                     row["atrasado"] = "false"
+            
+            assinaturas = db.execute("SELECT * FROM assinaturas WHERE contato_cpf = ? ORDER BY prazo DESC", user_cpf)
+            for row in assinaturas:
+                if HOJE > date.fromisoformat(row["prazo"]):
+                    row["vencida"] = "true"
+                else:
+                    row["vencida"] = "false"
+            prazo_default = HOJE + timedelta(days=PRAZO_ASSINATURA_DEFAULT)
         else:
             flash("Usuário não encontrado", "danger")
             return redirect("/")
         
-        return render_template("usuarios/detalhes.html", contato=contato, emprestimos=emprestimos, hoje=hoje)
-
-
-@app.route("/history")
-@login_required
-def history():
-    return render_template("history.html")
-
-
-@app.route("/emprestar", methods=["GET", "POST"])
-@login_required
-def emprestar():
-    # O método POST faz as operações de inclusão do empréstimo no banco de dados e no histórico
-    if request.method == "POST":
-        obra_id = request.form.get("book-id")
-        contato_cpf = request.form.get("user-id")
-        data = date.today()
-        prazo = request.form.get("prazo")
-
-        db.execute("INSERT INTO emprestimos (obra_id, contato_cpf, data, prazo) VALUES (?, ?, ?, ?)", obra_id, contato_cpf, data, prazo)
-        db.execute("UPDATE acervo SET status = 'EMPRESTADO' WHERE id = ?", obra_id)
-        
-        flash('Empréstimo cadastrado', 'success')
-        return redirect('/')
-    
-    # MÉTODO GET
-    # O método get é utilizado para disponibilizar e popular os formulários antes de ser enviado para o banco de dado
-    else:
-        PRAZO_DEFAULT = 15
-        data = {
-            "hoje": date.today(),
-            "prazodefault": date.today() + timedelta(days=PRAZO_DEFAULT),
-        }
-        if livro := db.execute("SELECT * FROM acervo WHERE id = ?", request.args.get("book-id")):
-            livro = livro[0]
-
-        if usuario := db.execute("SELECT * FROM contatos WHERE cpf = ?", request.args.get("user-id")):
-            usuario = usuario[0]
-        else:
-            usuario = {
-                "nome":"",
-                "cpf":"",
-            }
-        return render_template("emprestar.html", livro=livro, usuario=usuario, data=data)
+        return render_template("usuarios/detalhes.html", contato=contato, emprestimos=emprestimos, hoje=HOJE.isoformat(), prazo_default=prazo_default, plano_default=PLANO_ASSINATURA_DEFAULT, assinaturas=assinaturas)
 
 
 @app.route("/devolver", methods=["POST"])
@@ -403,9 +441,8 @@ def acervo_editar():
             (SELECT contato_cpf FROM emprestimos WHERE obra_id = ?)", obra_id
             )
             
-        hoje = date.today()
         for row in emprestimos:
-            if hoje > date.fromisoformat(row["prazo"]):
+            if HOJE > date.fromisoformat(row["prazo"]):
                 row["atrasado"] = "true"
             else:
                 row["atrasado"] = "false"

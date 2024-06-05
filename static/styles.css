@@ -36,3 +36,7 @@ nav .navbar-brand {
 .options-cell {
     text-align: center;
 }
+
+#assinatura-container {
+    display:none;
+}
