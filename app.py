@@ -62,12 +62,23 @@ def index():
         for a in assinaturas_ativas:
             if date.fromisoformat(a["prazo"]) < HOJE:
                 db.execute("UPDATE assinaturas SET status = 'VENCIDA' WHERE id = ?", a["id"])
+        
+    assinaturas = db.execute("SELECT * FROM assinaturas JOIN contatos ON assinaturas.contato_cpf = contatos.cpf\
+                             WHERE assinaturas.status = 'ATIVA' ORDER BY assinaturas.prazo DESC LIMIT 20")
+    emprestimos = db.execute("SELECT * FROM emprestimos JOIN contatos ON emprestimos.contato_cpf = contatos.cpf\
+                             JOIN acervo ON emprestimos.obra_id = acervo.id\
+                             ORDER BY emprestimos.prazo DESC LIMIT 20")
+    for e in emprestimos:
+        if date.fromisoformat(e["prazo"]) < HOJE:
+            e["atrasado"] = "true"
+        else:
+            e["atrasado"] = "false"
 
 
 
     acervo = db.execute('SELECT COUNT(*) FROM acervo')[0]['COUNT(*)']
-    usuarios = db.execute('SELECT COUNT(*) FROM users')[0]['COUNT(*)']
-    return render_template("index.html", acervo=acervo, usuarios=usuarios)
+    usuarios = db.execute('SELECT COUNT(*) FROM assinaturas WHERE status = "ATIVA"')[0]['COUNT(*)']
+    return render_template("index.html", acervo=acervo, usuarios=usuarios, assinaturas=assinaturas, emprestimos=emprestimos)
 
 
 @app.route("/acervo", methods=["GET", "POST"])
@@ -497,7 +508,7 @@ def usuarios_detalhes():
                 else:
                     row["atrasado"] = "false"
             
-            assinaturas = db.execute("SELECT * FROM assinaturas WHERE contato_cpf = ? ORDER BY prazo DESC", user_cpf)
+            assinaturas = db.execute("SELECT * FROM assinaturas WHERE contato_cpf = ? ORDER BY prazo DESC LIMIT 10", user_cpf)
 
             prazo_default = HOJE + timedelta(days=PRAZO_ASSINATURA_DEFAULT)
         else:
