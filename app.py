@@ -479,7 +479,10 @@ def usuarios_detalhes():
     if request.method == "POST":
         # FAZER EXCLUSÃO DO CONTATO DO DB
         if deletar_cpf := request.form.get("delete-id"):
+            db.execute("DELETE FROM emprestimos WHERE contato_cpf = ?", deletar_cpf)
+            db.execute("DELETE FROM assinaturas WHERE contato_cpf = ?", deletar_cpf)
             db.execute("DELETE FROM contatos WHERE cpf = ?", deletar_cpf)
+            
             flash("Usuário deletado do banco de dados", "success")
             return redirect("/usuarios")
 
@@ -490,7 +493,7 @@ def usuarios_detalhes():
         endereço = request.form.get("endereço")
         email = request.form.get("email")
 
-        if nome and cpf and telefone and endereço and email:
+        if nome and cpf:
             db.execute("UPDATE contatos SET nome = ?, cpf = ?, telefone = ?, endereço= ?, email = ? WHERE cpf = ?", nome, cpf, telefone, endereço, email, cpf)
             flash("Contato editado com sucesso", "success")
             return redirect("/usuarios")
