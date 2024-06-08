@@ -7,25 +7,94 @@
 {% block main %}
 <h3 class='mb-3'>Incluir livro</h3>
 
-<div class="input-group-container">
-    <form id="incluir" action="/incluir" method="post">
-        <div class="input-group mb-3">
-            <span class="input-group-text">Título</span>
-            <input name="titulo" type="text" class="form-control" autocomplete="off">
+<form id="incluir" action="/acervo/incluir" method="post">
+    <input type="hidden" name="user-id" id="user-id" value="">
+    <div class="input-group-container">
+        
+            <div class="input-group mb-3">
+                <span class="input-group-text">Título</span>
+                <input name="titulo" type="text" class="form-control" autocomplete="off" required>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Autor</span>
+                <input name="autor" type="text" class="form-control" autocomplete="off" required>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Ano</span>
+                <input name="ano" type="text" class="form-control" autocomplete="off">
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Editora</span>
+                <input name="editora" type="text" class="form-control" autocomplete="off">
+            </div>
+            <button id="incluir-btn" type='submit' class="btn btn-light btn-border">Incluir</button>
+    </div>
+    <div class="input-group-container mt-2">
+        <h5 class='mb-3'>Emprestar</h5>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="input-group mb-3">
+                    <span class="input-group-text">CPF</span>
+                    <input id="search" name="cpf" type="text" class="form-control" autocomplete="on">
+                    <div class="btn btn-outline-secondary" onclick="searchCpf()" id="button-addon2">Procurar</div>
+                </div>
+                </form>
+            </div>
+            <div class="col-lg-6">
+                <div class="input-group mb-3">
+                    <span class="input-group-text">Nome</span>
+                    <div id="nome" class="form-control" style="text-align: left; background-color: #e9ecef;"></div>
+                </div>
+            </div>
         </div>
-        <div class="input-group mb-3">
-            <span class="input-group-text">Autor</span>
-            <input name="autor" type="text" class="form-control" autocomplete="off">
+        <div id="ass-confirm" style="display:none">
+            <h5 class='mb-3'>Duração</h5>
+            <div class="row justify-content-md-center">
+                <div class="col-auto">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Data</span>
+                        <input name="data" type="text" class="form-control" autocomplete="off" value="{{ hoje }}" disabled>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Prazo</span>
+                        <input name="prazo" type="text" class="form-control" autocomplete="off" value="{{ prazo_default }}">
+                    </div>
+                </div>
+            </div>
+            <div class="container">
+                <button type="submit" class="btn btn-light btn-border">Incluir livro e emprestar</button>
+            </div>
+
         </div>
-        <div class="input-group mb-3">
-            <span class="input-group-text">Ano</span>
-            <input name="ano" type="text" class="form-control" autocomplete="off">
-        </div>
-        <div class="input-group mb-3">
-            <span class="input-group-text">Editora</span>
-            <input name="editora" type="text" class="form-control" autocomplete="off">
-        </div>
-        <button type='submit' class="btn btn-light btn-border mb-4">Incluir</button>
-    </form>
-</div>
+    </div>
+</form>
+
+<script>
+    function showWarningAss() {
+        var result = confirm("O usuário não é assinante. Emprestar assim mesmo?");
+        return result;
+    }
+</script>
+<script>
+    async function searchCpf() {
+        let search = document.getElementById("search");
+        let response = await fetch('/cpf-search?cpf=' + search.value);
+        let user = await response.json();
+        
+        if (response) {
+            document.getElementById("nome").innerHTML = user.nome;
+            document.getElementById("user-id").value = user.cpf;
+        }
+
+        if (user.nome) {
+            document.getElementById("incluir-btn").style.display = "none"; 
+            document.getElementById("ass-confirm").style.display = "block";
+            if (user.assinante === 'false') {
+                document.getElementById("incluir").setAttribute("onsubmit", "return showWarningAss()");
+            }
+        }
+    }
+</script>
 {% endblock %}

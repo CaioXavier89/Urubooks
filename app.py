@@ -2,7 +2,7 @@ import os
 
 from cs50 import SQL
 from datetime import date, timedelta
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import Flask, flash, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 import ast
@@ -144,9 +144,10 @@ def acervo():
 def acervo_editar():
     if request.method == "POST":
         # handles arquivamento do banco de dados
-        if archive_request := request.form.get('delete-id'):
-            db.execute("UPDATE acervo SET status = 'ARQUIVADO' WHERE id = ?", archive_request)
-            flash("Status da obra atualizado com sucesso", "warning")
+        if delete_request := request.form.get('delete-id'):
+            db.execute("DELETE FROM emprestimos WHERE obra_id = ?", delete_request)
+            db.execute("DELETE FROM acervo WHERE id = ?", delete_request)
+            flash("Obra removida do banco de dados.", "warning")
             return redirect("/acervo")
         
         previous_data = ast.literal_eval(request.form.get("previous_data"))
@@ -174,8 +175,7 @@ def acervo_editar():
         edited_book = db.execute("SELECT * FROM acervo WHERE id = ?", obra_id)
 
         emprestimos = db.execute(
-            "SELECT * FROM contatos JOIN emprestimos on contatos.cpf = emprestimos.contato_cpf WHERE contatos.cpf IN \
-            (SELECT contato_cpf FROM emprestimos WHERE obra_id = ?)", obra_id
+            "SELECT * FROM emprestimos JOIN contatos ON emprestimos.contato_cpf = contatos.cpf WHERE emprestimos.obra_id = ?", obra_id
             )
             
         for row in emprestimos:
@@ -202,15 +202,24 @@ def acervo_incluir():
         editora = request.form.get('editora')
         ano = request.form.get('ano')
 
-        if db.execute('SELECT * FROM acervo WHERE titulo = ?, autor = ?, editora = ?, ano = ?', titulo, autor, editora, ano):
+        if len(db.execute('SELECT * FROM acervo WHERE titulo = ? AND autor = ? AND editora = ? AND ano = ?', titulo, autor, editora, ano)) != 0:
             flash("Esse livro já existe no acervo", "warning")
             return render_template("acervo/incluir.html")
 
         db.execute('INSERT INTO acervo (titulo, autor, editora, ano, status) VALUES (?, ?, ?, ?, "DISPONIVEL")', titulo, autor, editora, ano)
+        obra_id = db.execute("SELECT last_insert_rowid()")[0]["last_insert_rowid()"]
         flash("Livro cadastrado", "success")
-        return redirect("/acervo")       
+    
+        if cpf := request.form.get("user-id"):
+            prazo = request.form.get("prazo")
+            fazer_emprestimo(obra_id, cpf, prazo)
+            flash("Empréstimo cadastrado", "success")
+        
+        return redirect("/acervo")
+        
     else:
-        return render_template("acervo/incluir.html")
+        prazo_default = HOJE + timedelta(days=PRAZO_ASSINATURA_DEFAULT)
+        return render_template("acervo/incluir.html", hoje=HOJE, prazo_default=prazo_default)
 
 
 @app.route("/assinatura", methods=["POST"])
@@ -224,7 +233,27 @@ def assinatura():
     plano = request.form.get("plano")
     prazo = request.form.get("prazo")
     
-    return fazer_assinatura(contato_cpf, plano, prazo)
+    if fazer_assinatura(contato_cpf, plano, prazo) == True:
+        flash("Assinatura feita com sucesso.", "success")
+        return redirect("/")
+
+
+@app.route("/cpf-search")
+def cpf_search():
+    cpf = request.args.get("cpf")
+    usuario = {
+        "nome":"",
+        "cpf":"",
+    }
+
+    if query := db.execute("SELECT * FROM contatos WHERE cpf = ?", cpf):
+        usuario = query[0]
+        if len(db.execute("SELECT * FROM assinaturas WHERE contato_cpf = ? AND status = 'ATIVA'", cpf)) != 0:
+            usuario["assinante"] = "true"
+        else:
+            usuario["assinante"] = "false"
+        
+    return jsonify(usuario)
 
 
 @app.route("/devolver", methods=["POST"])
@@ -256,8 +285,7 @@ def emprestar():
         contato_cpf = request.form.get("user-id")
         prazo = request.form.get("prazo")
 
-        db.execute("INSERT INTO emprestimos (obra_id, contato_cpf, data, prazo) VALUES (?, ?, ?, ?)", obra_id, contato_cpf, HOJE, prazo)
-        db.execute("UPDATE acervo SET status = 'EMPRESTADO' WHERE id = ?", obra_id)
+        fazer_emprestimo(obra_id, contato_cpf, prazo)
         
         flash('Empréstimo cadastrado', 'success')
         return redirect('/')
@@ -276,11 +304,8 @@ def emprestar():
         contato_cpf = request.args.get("user-id")
         if usuario := db.execute("SELECT * FROM contatos WHERE cpf = ?", contato_cpf):
             usuario = usuario[0]
-            assinaturas = db.execute("SELECT * FROM assinaturas WHERE contato_cpf = ?", contato_cpf)
-            for a in assinaturas:
-                if a["status"] == "ATIVA":
+            if len(db.execute("SELECT * FROM assinaturas WHERE contato_cpf = ? AND status = 'ATIVA'", contato_cpf)) != 0:
                     usuario["assinante"] = "true"
-                    break
             else:
                 usuario["assinante"] = "false"
         
@@ -482,22 +507,33 @@ def usuarios_detalhes():
         return render_template("usuarios/detalhes.html", contato=contato, emprestimos=emprestimos, hoje=HOJE.isoformat(), prazo_default=prazo_default, plano_default=PLANO_ASSINATURA_DEFAULT, assinaturas=assinaturas)
 
 # FUNÇÕES
+def fazer_emprestimo(id, cpf, prazo):
+    if validate_iso(prazo) == True:
+        db.execute("INSERT INTO emprestimos (obra_id, contato_cpf, data, prazo) VALUES (?, ?, ?, ?)", id, cpf, HOJE.isoformat(), prazo)
+        db.execute("UPDATE acervo SET status = 'EMPRESTADO' WHERE id = ?", id)
+        return True
+
 
 def fazer_assinatura(cpf, plano, prazo):
+    if validate_iso(prazo) == True:
+        if len(db.execute("SELECT * FROM assinaturas WHERE contato_cpf = ? AND status = 'ATIVA'", cpf)) == 0:
+            db.execute("INSERT INTO assinaturas (contato_cpf, data, plano, prazo, status) VALUES (?, ?, ?, ?, 'ATIVA')", cpf, HOJE.isoformat(), plano, prazo)
+            return True
+        else:
+            flash("O usuário já possui uma assinatura ativa.", "danger")
+            return redirect("/")
+
+
+def validate_iso(prazo):
     try:
         date.fromisoformat(prazo)
     except ValueError:
         flash("Formato inválido. Utilize: AAAA-MM-DD.", "danger")
         return redirect("/")
-    
-    if len(db.execute("SELECT * FROM assinaturas WHERE contato_cpf = ? AND status = 'ATIVA'", cpf)) == 0:
-        db.execute("INSERT INTO assinaturas (contato_cpf, data, plano, prazo, status) VALUES (?, ?, ?, ?, 'ATIVA')", cpf, HOJE.isoformat(), plano, prazo)
-        flash("Assinatura feita com sucesso.", "success")
-        return redirect("/")
     else:
-        flash("O usuário já possui uma assinatura ativa.", "danger")
-        return redirect("/")
+        return True
 
 
 if __name__ == '__main__':
     app.run(debug=True)
+
