@@ -3,5 +3,3 @@ datetime
 flask
 flask_session
 werkzeug
-ast
-functools
