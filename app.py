@@ -1,3 +1,5 @@
+import os
+
 from cs50 import SQL
 from datetime import date, timedelta
 from flask import Flask, flash, redirect, render_template, request, session, jsonify
@@ -6,6 +8,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import ast
 
 from helpers import login_required
+port = os.environ.get('PORT')
 
 # Configure application
 app = Flask(__name__)
@@ -551,5 +554,5 @@ def validate_iso(prazo):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=10000, host='0.0.0.0')
+    app.run(debug=False, port=port)
 
