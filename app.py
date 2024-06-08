@@ -40,6 +40,14 @@ PRAZO_ASSINATURA_DEFAULT = 365 # DIAS
 PLANO_ASSINATURA_DEFAULT = "BÁSICO"
 HOJE = date.today()
 
+OPERAÇÕES_HISTORICO = [
+    "INCLUSÃO NO ACERVO",
+    "ASSINATURA",
+    "VENCIMENTO DE ASSINATURA",
+    "EMPRÉSTIMO",
+    "DEVOLUÇÃO",
+]
+
 @app.after_request
 def after_request(response):
     """Ensure responses aren't cached"""
@@ -62,6 +70,7 @@ def index():
         for a in assinaturas_ativas:
             if date.fromisoformat(a["prazo"]) < HOJE:
                 db.execute("UPDATE assinaturas SET status = 'VENCIDA' WHERE id = ?", a["id"])
+                db.execute('INSERT INTO historico (data, contato_cpf, operacao) VALUES(?, ?, "VENCIMENTO DE ASSINATURA")', HOJE.isoformat(), a["contato_cpf"])
         
     assinaturas = db.execute("SELECT * FROM assinaturas JOIN contatos ON assinaturas.contato_cpf = contatos.cpf\
                              WHERE assinaturas.status = 'ATIVA' ORDER BY assinaturas.prazo DESC LIMIT 20")
@@ -74,11 +83,10 @@ def index():
         else:
             e["atrasado"] = "false"
 
-
-
     acervo = db.execute('SELECT COUNT(*) FROM acervo')[0]['COUNT(*)']
     usuarios = db.execute('SELECT COUNT(*) FROM assinaturas WHERE status = "ATIVA"')[0]['COUNT(*)']
-    return render_template("index.html", acervo=acervo, usuarios=usuarios, assinaturas=assinaturas, emprestimos=emprestimos)
+
+    return render_template("index.html", acervo=acervo, usuarios=usuarios, assinaturas=assinaturas, emprestimos=emprestimos, hoje=HOJE.isoformat())
 
 
 @app.route("/acervo", methods=["GET", "POST"])
@@ -219,6 +227,7 @@ def acervo_incluir():
 
         db.execute('INSERT INTO acervo (titulo, autor, editora, ano, status) VALUES (?, ?, ?, ?, "DISPONIVEL")', titulo, autor, editora, ano)
         obra_id = db.execute("SELECT last_insert_rowid()")[0]["last_insert_rowid()"]
+        db.execute("INSERT INTO historico (data, operacao, obra_id) VALUES(?, 'INCLUSÃO NO ACERVO', ?)", HOJE.isoformat(), obra_id)
         flash("Livro cadastrado", "success")
     
         if cpf := request.form.get("user-id"):
@@ -245,6 +254,7 @@ def assinatura():
     prazo = request.form.get("prazo")
     
     if fazer_assinatura(contato_cpf, plano, prazo) == True:
+        db.execute('INSERT INTO historico (data, contato_cpf, operacao) VALUES(?, ?, "NOVA ASSINATURA")', HOJE.isoformat(), contato_cpf)
         flash("Assinatura feita com sucesso.", "success")
         return redirect("/")
 
@@ -273,8 +283,9 @@ def devolver():
     emprestimo_id = request.form.get("emprestimo-id")
 
     if obra_id and emprestimo_id:
+        contato_cpf = db.execute("SELECT contato_cpf FROM emprestimos WHERE id = ?", emprestimo_id)[0]["contato_cpf"]
         db.execute("DELETE FROM emprestimos WHERE id = ?", emprestimo_id)
-        # TODO adicionar entrada no histórico
+        db.execute('INSERT INTO historico (data, contato_cpf, obra_id, operacao) VALUES(?, ?, ?, "DEVOLUÇÃO")', HOJE.isoformat(), contato_cpf, obra_id)
         
         # checar se a obra está emprestada a alguém, caso negativo mudar status da obra para disponível
         if len(db.execute("SELECT * FROM emprestimos WHERE obra_id = ?", obra_id)) == 0:
@@ -297,7 +308,7 @@ def emprestar():
         prazo = request.form.get("prazo")
 
         fazer_emprestimo(obra_id, contato_cpf, prazo)
-        
+        db.execute('INSERT INTO historico (data, contato_cpf, obra_id, operacao) VALUES(?, ?, ?, "EMPRÉSTIMO")', HOJE.isoformat(), contato_cpf, obra_id)
         flash('Empréstimo cadastrado', 'success')
         return redirect('/')
     
@@ -334,8 +345,8 @@ def historico():
     REGISTRO_POR_PAGINA = 30
     pagina = int(request.args.get("pagina", 0))
     offset = REGISTRO_POR_PAGINA * pagina
-    historico = db.execute("SELECT * FROM historico JOIN acervo on historico.obra_id = acervo.id \
-                           JOIN contatos on historico.contato_cpf = contatos.cpf ORDER BY historico.data DESC LIMIT ?, ?",
+    historico = db.execute("SELECT * FROM historico LEFT JOIN acervo on historico.obra_id = acervo.id \
+                           LEFT JOIN contatos on historico.contato_cpf = contatos.cpf ORDER BY historico.data DESC LIMIT ?, ?",
                            offset, REGISTRO_POR_PAGINA)
     page_data = {
         "atual":pagina,
@@ -444,11 +455,7 @@ def usuarios_cadastro():
             flash("Esse CPF já está cadastrado", 'danger')
             return redirect("/usuarios")
         
-        # handles telefone input
         telefone = request.form.get('telefone').replace("-", "").replace("(", "").replace(")", "")
-        if not telefone:
-            flash('Telefone necessário', 'danger')
-        
         email = request.form.get('e-mail')
         endereço = request.form.get('endereço')
 
@@ -457,6 +464,7 @@ def usuarios_cadastro():
 
         if request.form.get("cadastrar-assinante") == "on":
             fazer_assinatura(cpf, request.form.get("plano"), request.form.get("prazo"))
+            db.execute('INSERT INTO historico (data, contato_cpf, operacao) VALUES(?, ?, "NOVA ASSINATURA")', HOJE.isoformat(), cpf)
         
         flash("Usuário cadastrado com sucesso!", "success")
         return redirect('/')

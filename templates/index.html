@@ -6,36 +6,12 @@
 
 {% block main %}
 <div class="container">
-    <span class="dashboard-info border-danger rounded-circle text-center mx-3 my-1">Acervo<br><h3>{{ acervo }}</h2></span>
-    <span class="dashboard-info border-danger rounded-circle text-center mx-3 my-1">Assinantes<br><h3>{{ usuarios }}</h2></span>
+    <h5>Bem-vindo! - {{ hoje }}</h5>
+    <span class="dashboard-info border-danger rounded-circle text-center m-3">Acervo<br><h3>{{ acervo }}</h2></span>
+    <span class="dashboard-info border-danger rounded-circle text-center m-3">Assinantes<br><h3>{{ usuarios }}</h2></span>
 </div>
 <div class="row justify-content-center my-4">
-    <div class="col-lg-auto m-1">
-        <div>
-            <h5>Assinaturas ativas</h5>
-            <table class="table table-striped">
-                <thead class="table-light">
-                    <th>Nome</th>
-                    <th>Data</th>
-                    <th>Prazo</th>
-                </thead>
-                <tbody>
-                    {% if assinaturas %}
-                        {% for assinatura in assinaturas %}
-                        <tr>
-                            <td>{{ assinatura.nome }}</td>
-                            <td>{{ assinatura.data }}</td>
-                            <td>{{ assinatura.prazo }}</td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                    <tr>Nenhuma assinatura ativa</tr>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <div class="col-lg-auto m-1">
+    <div class="col-xl-auto m-1">
         <h5>Empréstimos</h5>
         <table class="table table-striped">
             <thead class="table-light">
@@ -46,23 +22,48 @@
             </thead>
             <tbody>
                 {% if emprestimos %}
-                {% for emprestimo in emprestimos %}
-                <tr>
-                    <td>{{ emprestimo.titulo }}</td>
-                    <td>{{ emprestimo.autor }}</td>
-                    <td>{{ emprestimo.nome }}</td>
-                    {% if emprestimo.atrasado == "true" %}
-                        <td style="color:red"><b>{{ emprestimo.prazo }}<b></td>
-                    {% else %}
-                        <td style="color:green"><b>{{ emprestimo.prazo }}<b></td>
-                    {% endif %}
-                </tr>
+                    {% for emprestimo in emprestimos %}
+                        <tr>
+                            <td>{{ emprestimo.titulo }}</td>
+                            <td>{{ emprestimo.autor }}</td>
+                            <td>{{ emprestimo.nome }}</td>
+                            {% set color = "red" if emprestimo.atrasado == "true" else "green" %}
+                                <td style="color:{{ color }}"><b>{{ emprestimo.prazo }}<b></td>
+                        </tr>
                     {% endfor %}
                 {% else %}
-                <tr>Nenhum empréstimo</tr>
+                    <tr>
+                        <td colspan="6">Nenhum empréstimo</td>
+                    </tr>
+                            
                 {% endif %}
             </tbody>
         </table>
+    </div>
+    <div class="col-xl-auto m-1">
+        <div>
+            <h5>Assinaturas ativas</h5>
+            <table class="table table-striped">
+                <thead class="table-light">
+                    <th>Nome</th>
+                    <th>Prazo</th>
+                </thead>
+                <tbody>
+                    {% if assinaturas %}
+                        {% for assinatura in assinaturas %}
+                        <tr>
+                            <td>{{ assinatura.nome }}</td>
+                            <td>{{ assinatura.prazo }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="2">Nenhuma assinatura</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}

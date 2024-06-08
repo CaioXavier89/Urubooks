@@ -9,23 +9,23 @@
     <table class='table table-bordered table-striped' style='text-align:start'>
         <thead class="table-dark">
             <th>Data</th>
+            <th>Operação</th>
             <th>Nome</th>
             <th>Cpf</th>
-            <th>Operação</th>
             <th>Titulo</th>
-            <th>Id da obra</th>
         </thead>
         <tbody>
         {% if historico %}
             {% for registro in historico %}
-                {% set trclass = 'table-danger' if registro.operacao == 'EMPRESTIMO' else 'table-success' %}
-                <tr class="{{ trclass }}">
+                <tr>
                     <td>{{ registro.data }}</td>
-                    <td>{{ registro.nome }}</td>
-                    <td>{{ registro.cpf }}</td>
                     <td>{{ registro.operacao }}</td>
-                    <td>{{ registro.titulo }}</td>
-                    <td>{{ registro.id }}</td>
+                    {% set nome = registro.nome if registro.nome else "--" %}
+                    <td>{{ nome }}</td>
+                    {% set cpf = registro.nome if registro.cpf else "--" %}
+                    <td>{{ cpf }}</td>
+                    {% set titulo = registro.nome if registro.titulo else "--" %}
+                    <td>{{ titulo }}</td>
                 </tr>
                 {% endfor %}
         {% else %}
