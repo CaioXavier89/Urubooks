@@ -1,12 +1,9 @@
-import os
-
 from cs50 import SQL
 from datetime import date, timedelta
 from flask import Flask, flash, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 import ast
-
 
 from helpers import login_required
 
