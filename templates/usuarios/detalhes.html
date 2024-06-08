@@ -100,15 +100,14 @@
             </thead>
             <tbody>
                 {% for assinatura in assinaturas %}
-                {% set trclass = "table-primary" if assinatura.vencida == "false" else "table-secondary" %}
-                {% set status = "ATIVA" if assinatura.vencida == "false" else "VENCIDA" %}
+                {% set trclass = "table-primary" if assinatura.status == "ATIVA" else "table-secondary" %}
                 <tr class="{{ trclass }}">
-                    <td>{{ status }}</td>
+                    <td>{{ assinatura.status }}</td>
                     <td>{{ assinatura.plano }}</td>
                     <td>{{ assinatura.data }}</td>
                     <td>{{ assinatura.prazo }}</td>
                     <td>
-                        {% if assinatura.vencida == "false" %}
+                        {% if assinatura.status == "ATIVA" %}
                         <form action="/assinatura" method="post">
                             <input name="deletar-assinatura" value="{{ assinatura.id }}" type="hidden">
                             <button style="border-style: none; background-color: inherit;" type="submit">
@@ -146,7 +145,7 @@
                 <div class="col-sm-4">
                     <div class="input-group mb-3">
                         <span class="input-group-text">Prazo</span>
-                        <input name="prazo" type="text" autocomplete="off" class="form-control" value="{{ prazo_default }}">
+                        <input name="prazo" type="text" autocomplete="off" class="form-control" value="{{ prazo_default }}" placeholder="AAAA-MM-DD">
                     </div>
                 </div>
             </div>

@@ -40,7 +40,8 @@
                 <div class="col-auto">
                     <div class="input-group mb-3">
                         <div class="input-group-text">
-                            <input class="form-check-input" name="mostrar-arquivados" id="archived-checkbox" type="checkbox" autocomplete="off" value="true">
+                            {% set checked = "checked" if filtros.arquivado == 'true' else ""%}
+                            <input class="form-check-input" name="mostrar-arquivados" id="archived-checkbox" type="checkbox" autocomplete="off" value="true" {{ checked }}>
                         </div>
                         <input type="text" class="form-control" value="Mostrar arquivados" style="background-color: white" disabled>
                     </div>

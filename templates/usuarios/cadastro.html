@@ -29,7 +29,51 @@
                 <span class="input-group-text">Endereço</span>
                 <input name="endereço" type="text" class="form-control" placeholder="Endereço" autocomplete="off">
             </div>
+            <div class="row justify-content-center">
+                <div class="col-auto">
+                    <div class="input-group mb-3">
+                        <div class="input-group-text">
+                                <input id="assinatura-checkbox" class="form-check-input" name="cadastrar-assinante" type="checkbox">
+                        </div>
+                        <div class="form-control">Cadastrar com assinatura</div>
+                    </div>
+                </div>
+            </div>
+            <div id="assinatura-container">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">Plano</span>
+                            <input name="plano" type="text" class="form-control" value="{{ plano_default }}" required>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">Data</span>
+                            <input name="data" type="text" class="form-control" value="{{ hoje }}" disabled>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">Prazo</span>
+                            <input name="prazo" type="text" autocomplete="off" class="form-control" value="{{ prazo_default }}" placeholder="AAAA-MM-DD">
+                        </div>
+                    </div>
+                </div>
+            </div>
             <button class="btn btn-light btn-border" type="submit">Cadastrar</button>
         </form>
     </div>
+    <script>
+        var checkbox = document.querySelector("#assinatura-checkbox");
+        var container = document.getElementById("assinatura-container");
+        checkbox.addEventListener("change", function() {
+            if (container.style.display == "inline") {
+                container.style.display = "none";
+            }
+            else {
+                container.style.display = "inline"
+            }
+        });
+    </script>
 {% endblock %}

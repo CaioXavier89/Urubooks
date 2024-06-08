@@ -6,6 +6,19 @@
 
 {% block main %}
     <h3 class='mb-3'>Usuários</h3>
+    <div class="row justify-content-center">
+        {% set checked = "checked" if filtro == "on" else "" %}
+            <div class="col-auto">
+                <div class="input-group mb-3">
+                    <div class="input-group-text">
+                        <form id="filtrar-assinantes" action="/usuarios" method="get">
+                            <input id="assinantes-checkbox" class="form-check-input" name="filtrar-assinantes" type="checkbox" {{ checked }}>
+                        </form>
+                    </div>
+                    <div class="form-control">Filtrar assinantes</div>
+                </div>
+            </div>
+    </div>
     <table class='table table-bordered table-striped' style='text-align:start'>
         <thead class="table-dark">
             <th>CPF</th>
@@ -22,17 +35,17 @@
                 </th>
         </thead>
         <tbody>
-        {% if contatos %}
-            {% for contato in contatos %}
+        {% if usuarios %}
+            {% for usuario in usuarios %}
             <tr>
-                <td>{{ contato.cpf }}</td>
-                <td>{{ contato.nome }}</td>
-                <td>{{ contato.telefone }}</td>
-                <td>{{ contato.email }}</td>
-                <td>{{ contato.endereço[:40] }}</td>
+                <td>{{ usuario.cpf }}</td>
+                <td>{{ usuario.nome }}</td>
+                <td>{{ usuario.telefone }}</td>
+                <td>{{ usuario.email }}</td>
+                <td>{{ usuario.endereço[:40] }}</td>
                 <td class="options-cell">
                         <form action="/usuarios/detalhes" method="get">
-                            <input name="detalhar" value="{{ contato.cpf }}" type='hidden'/>
+                            <input name="detalhar" value="{{ usuario.cpf }}" type='hidden'/>
                             <button type='submit' class="btn btn-outline-danger mx-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
                                     <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
@@ -72,5 +85,9 @@
             {% endif %}
         </div>
     </div>
-
+<script>
+    document.getElementById('assinantes-checkbox').addEventListener('change', function() {
+            document.getElementById('filtrar-assinantes').submit();
+    });
+</script>
 {% endblock %}
