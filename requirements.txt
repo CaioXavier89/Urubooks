@@ -2,6 +2,6 @@ cs50
 datetime
 flask
 flask_session
-werkzeug.security
+werkzeug
 ast
 functools
