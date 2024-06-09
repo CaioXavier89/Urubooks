@@ -10,9 +10,9 @@ nav .navbar-brand {
 
 .dashboard-info {
     display:inline-block;
-    height: 130px;
-    width: 130px;
-    padding-top:35px;
+    height: 110px;
+    width: 110px;
+    padding-top:20px;
     border-style: solid;
     border-width: 3px;
 }
@@ -39,4 +39,14 @@ nav .navbar-brand {
 
 #assinatura-container {
     display:none;
+}
+
+.display-desktop {
+    display: none;
+}
+
+@media (min-width: 993px) {
+    .display-desktop {
+        display: table-cell;
+    }
 }

@@ -7,11 +7,13 @@
 {% block main %}
 <div class="container">
     <h5>Bem-vindo! - {{ hoje }}</h5>
-    <span class="dashboard-info border-danger rounded-circle text-center m-3">Acervo<br><h3>{{ acervo }}</h2></span>
-    <span class="dashboard-info border-danger rounded-circle text-center m-3">Assinantes<br><h3>{{ usuarios }}</h2></span>
+    <hr>
+    <span class="dashboard-info border-danger rounded-circle text-center m-1"><tag style="font-size: small;">Acervo</tag><br><h3>{{ acervo }}</h3></span>
+    <span class="dashboard-info border-danger rounded-circle text-center m-1"><tag style="font-size: small;">Assinantes</tag><br><h3>{{ usuarios }}</h3></span>
 </div>
+<hr>
 <div class="row justify-content-center my-4">
-    <div class="col-xl-auto m-1">
+    <div class="col-xl-auto m-1 table-responsive">
         <h5>Empréstimos</h5>
         <table class="table table-striped">
             <thead class="table-light">
@@ -41,11 +43,11 @@
         </table>
     </div>
     <div class="col-xl-auto m-1">
-        <div>
+        <div class="table-responsive">
             <h5>Assinaturas ativas</h5>
             <table class="table table-striped">
                 <thead class="table-light">
-                    <th>Nome</th>
+                    <th>Usuário</th>
                     <th>Prazo</th>
                 </thead>
                 <tbody>

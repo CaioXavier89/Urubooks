@@ -60,63 +60,64 @@
     </form>
 </div>
 <!-- TABELA DE ACERVO -->
-<table class='table table-bordered table-striped' style='text-align:start'>
-    <thead class="table-dark">
-        <th>Id</th>
-        <th>Título</th>
-        <th>Autor</th>
-        <th>Editora</th>
-        <th>Ano</th>
-        <th>Status</th>
-        <th style="text-align: center; background-color: #198754; padding: 0;">
-            <a type='button' class="btn btn-success" href="acervo/incluir" style="width: 100%; height: 100%">
-                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
-                </svg>
-            </a>
-        </th>
-    </thead>
-    <tbody>
-        {% if acervo %}
-            {% for livro in acervo %}
-                <tr>
-                    <td>{{ livro.id }}</td>
-                    <td>{{ livro.titulo }}</td>
-                    <td>{{ livro.autor }}</td>
-                    <td>{{ livro.editora }}</td>
-                    <td>{{ livro.ano }}</td>
-                    <td>{{ livro.status[:5] }}</td>
-                    <td class="options-cell">
-                        <div class="btn-group">
-                            <form action="/acervo/editar" method="get">
-                                <input name="edit-book" value="{{ livro.id }}" type='hidden'/>
-                                <button type='submit' class="btn btn-outline-primary mx-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                                        <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                                        <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-                                    </svg>
-                                </button>
-                            </form>
-                            <form action="/emprestar" method="get">
-                                <input name="book-id" value="{{ livro.id }}" type='hidden'/>
-                                <button type='submit' class="btn btn-outline-primary mx-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar-week" viewBox="0 0 16 16">
-                                        <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z"/>
-                                        <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
-                                    </svg>
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            {% endfor %}
-        {% else %}
-        <tr><td colspan="6"><h6 style="color:grey;text-align: center;">Nenhuma obra encontrada.</h6></td></tr>
-        {% endif %}
-    </tbody>
-</table>
+ <div class="table-responsive">
+    <table class='table table-bordered table-striped' style='text-align:start'>
+        <thead class="table-dark">
+            <th>Título</th>
+            <th>Autor</th>
+            <th>Editora</th>
+            <th class="display-desktop">Ano</th>
+            <th class="display-desktop">Status</th>
+            <th style="text-align: center; background-color: #198754; padding: 0;">
+                <a type='button' class="btn btn-success" href="acervo/incluir" style="width: 100%; height: 100%">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
+                    </svg>
+                </a>
+            </th>
+        </thead>
+        <tbody>
+            {% if acervo %}
+                {% for livro in acervo %}
+                    {% set classstatus = "table-danger" if livro.status == 'ARQUIVADO' else "" %}
+                    <tr class="{{ classstatus }}">
+                        <td>{{ livro.titulo }}</td>
+                        <td>{{ livro.autor }}</td>
+                        <td>{{ livro.editora }}</td>
+                        <td class="display-desktop">{{ livro.ano }}</td>
+                        <td class="display-desktop">{{ livro.status[:5] }}</td>
+                        <td class="options-cell">
+                            <div class="btn-group">
+                                <form action="/acervo/editar" method="get">
+                                    <input name="edit-book" value="{{ livro.id }}" type='hidden'/>
+                                    <button title="Editar" type='submit' class="btn btn-outline-primary mx-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                            <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                            <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                                <form action="/emprestar" method="get">
+                                    <input name="book-id" value="{{ livro.id }}" type='hidden'/>
+                                    <button title="Emprestar" type='submit' class="btn btn-outline-primary mx-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar-week" viewBox="0 0 16 16">
+                                            <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z"/>
+                                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+            <tr><td colspan="6"><h6 style="color:grey;text-align: center;">Nenhuma obra encontrada.</h6></td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
 <div class="container">
-    <div class="row justify-content-md-center align-items-center">
+    <div class="row justify-content-center">
         {% if page_data.atual > 0 %}
             <div class="col-auto">
                 <button class="btn btn-light btn-border" type="button" onclick="previousPage()">&lt;&lt; Anterior</button>
