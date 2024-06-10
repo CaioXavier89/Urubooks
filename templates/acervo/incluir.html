@@ -91,7 +91,7 @@
         if (user.nome) {
             document.getElementById("incluir-btn").style.display = "none"; 
             document.getElementById("ass-confirm").style.display = "block";
-            if (user.assinante === 'false') {
+            if (user.assinante === 'FALSE') {
                 document.getElementById("incluir").setAttribute("onsubmit", "return showWarningAss()");
             }
         }

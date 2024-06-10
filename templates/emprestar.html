@@ -50,8 +50,8 @@
                 <div class="col-lg-6">
                     <div class="input-group mb-3">
                         <span class="input-group-text">CPF</span>
-                        <input name="book-id" type="hidden" value="{{ livro.id }}">
-                        <input name="user-id" type="text" class="form-control" autocomplete="on" value="{{ usuario.cpf }}">
+                        <input name="book_id" type="hidden" value="{{ livro.id }}">
+                        <input name="user_id" type="text" class="form-control" autocomplete="on" value="{{ usuario.cpf }}">
                         <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Procurar</button>
                     </div>
                 </div>
@@ -65,7 +65,7 @@
         </form>
     </div>
             {% if usuario.nome %}
-            {% set alert = "return showWarningAss()" if usuario.assinante == "false" else '' %}
+            {% set alert = "return showWarningAss()" if usuario.assinante == "FALSE" else '' %}
             <form action="/emprestar" method="post" onsubmit="{{ alert }}">
                 <div class="input-group-container mt-2">
                     <h5 class='mb-3'>Duração</h5>
@@ -84,8 +84,8 @@
                         </div>
                     </div>
                     <div>
-                        <input type="hidden" name="user-id" value="{{ usuario.cpf }}">
-                        <input type="hidden" name="book-id" value="{{ livro.id }}">
+                        <input type="hidden" name="user_id" value="{{ usuario.cpf }}">
+                        <input type="hidden" name="book_id" value="{{ livro.id }}">
 
                         <button type="submit" class="btn btn-light btn-border">Emprestar</button>
                     </div>

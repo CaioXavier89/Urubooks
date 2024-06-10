@@ -11,7 +11,11 @@
     <h5 class='mb-3'>{{ edited_book.titulo }}</h3>
     <form id="book-editing" action="/acervo/editar" method="post">
         <input type="hidden" name="previous_data" value="{{ edited_book }}">
-        <input type="hidden" name="book-id" value="{{ edited_book.id }}">
+        <input type="hidden" name="book_id" value="{{ edited_book.id }}">
+        <div class="input-group mb-3">
+            <span class="input-group-text">Id da obra</span>
+            <div class="form-control" style="text-align: left; background-color:#e9ecef">{{ edited_book.id }}</div>
+        </div>
         <div class="input-group mb-3">
             <span class="input-group-text">Título</span>
             <input name="titulo" type="text" class="form-control" autocomplete="off" value="{{ edited_book.titulo }}" required>
@@ -80,7 +84,7 @@
                     <td>
                         <form action="/devolver" method="post">
                             <input name="emprestimo-id" value="{{ emprestimo.id }}" type="hidden" >
-                            <input name="book-id" value="{{ emprestimo.obra_id }}" type="hidden" >
+                            <input name="book_id" value="{{ emprestimo.obra_id }}" type="hidden" >
                             <button style="border-style: none; background-color: inherit;" type="submit">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#B01F00" class="bi bi-x-circle" viewBox="0 0 16 16">
                                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -98,7 +102,7 @@
         {% endif %}
         <div>
             <form action="/emprestar" method="get">
-                <input name="book-id" value="{{ edited_book.id }}" type='hidden'/>
+                <input name="book_id" value="{{ edited_book.id }}" type='hidden'/>
                 <button type='submit' class="btn btn-light btn-border mt-3">
                     Emprestar
                 </button>

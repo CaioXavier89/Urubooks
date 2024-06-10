@@ -16,7 +16,7 @@
         </div>
         <div class="input-group mb-3">
             <span class="input-group-text">Cpf</span>
-            <input name="cpf" type="text" class="form-control" autocomplete="off" value="{{ contato.cpf }}" disabled>
+            <input name="cpf" type="text" class="form-control" autocomplete="off" value="{{ contato.cpf }}" style="background-color:#e9ecef" readonly>
         </div>
         <div class="input-group mb-3">
             <span class="input-group-text">Telefone</span>
@@ -128,7 +128,7 @@
     {% endif %}
     <div id="assinatura-container">
         <form action="/assinatura" method="post">
-            <input name="user-id" type="hidden" value="{{ contato.cpf }}">
+            <input name="user_id" type="hidden" value="{{ contato.cpf }}">
             <div class="row">
                 <div class="col-sm-4">
                     <div class="input-group mb-3">
