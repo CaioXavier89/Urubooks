@@ -70,7 +70,7 @@ def index():
         for a in assinaturas_ativas:
             if date.fromisoformat(a["prazo"]) < HOJE:
                 db.execute("UPDATE assinaturas SET status = 'VENCIDA' WHERE id = ?", a["id"])
-                db.execute("UPDATE contatos SET assinante = 'FALSE' WHERE id = ?", a["contat_id"])
+                db.execute("UPDATE contatos SET assinante = 'FALSE' WHERE id = ?", a["contato_id"])
                 db.execute('INSERT INTO historico (data, contato_cpf, operacao) VALUES(?, ?, "VENCIMENTO DE ASSINATURA")', HOJE.isoformat(), a["contato_cpf"])
         
     assinaturas = db.execute("SELECT * FROM assinaturas JOIN contatos ON assinaturas.contato_cpf = contatos.cpf\
