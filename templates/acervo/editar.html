@@ -75,11 +75,11 @@
                 <tr>
                     <td>{{ emprestimo.cpf }}</td>
                     <td>{{ emprestimo.nome }}</td>
-                    <td>{{ emprestimo.data }}</td>
+                    <td>{{ emprestimo.data | data }}</td>
                     {% if emprestimo.atrasado == "true" %}
-                        <td style="color:red"><b>{{ emprestimo.prazo }}<b></td>
+                        <td style="color:red"><b>{{ emprestimo.prazo | data }}<b></td>
                     {% else %}
-                        <td style="color:green"><b>{{ emprestimo.prazo }}<b></td>
+                        <td style="color:green"><b>{{ emprestimo.prazo | data }}<b></td>
                     {% endif %}
                     <td>
                         <form action="/devolver" method="post">

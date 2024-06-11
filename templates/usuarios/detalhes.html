@@ -60,11 +60,11 @@
                 <td>{{ emprestimo.autor }}</td>
                 <td>{{ emprestimo.editora }}</td>
                 <td>{{ emprestimo.ano }}</td>
-                <td>{{ emprestimo.data }}</td>
+                <td>{{ emprestimo.data | data }}</td>
                 {% if emprestimo.atrasado == "true" %}
-                    <td style="color:red"><b>{{ emprestimo.prazo }}<b></td>
+                    <td style="color:red"><b>{{ emprestimo.prazo | data }}<b></td>
                 {% else %}
-                    <td style="color:green"><b>{{ emprestimo.prazo }}<b></td>
+                    <td style="color:green"><b>{{ emprestimo.prazo | data }}<b></td>
                 {% endif %}
                 <td>
                     <form action="/devolver" method="post">
@@ -104,8 +104,8 @@
                 <tr class="{{ trclass }}">
                     <td>{{ assinatura.status }}</td>
                     <td>{{ assinatura.plano }}</td>
-                    <td>{{ assinatura.data }}</td>
-                    <td>{{ assinatura.prazo }}</td>
+                    <td>{{ assinatura.data | data }}</td>
+                    <td>{{ assinatura.prazo | data }}</td>
                     <td>
                         {% if assinatura.status == "ATIVA" %}
                         <form action="/assinatura" method="post">
@@ -139,13 +139,13 @@
                 <div class="col-sm-4">
                     <div class="input-group mb-3">
                         <span class="input-group-text">Data</span>
-                        <input name="data" type="text" class="form-control" value="{{ hoje }}" disabled>
+                        <input name="data" type="text" class="form-control" value="{{ hoje | data }}" disabled>
                     </div>
                 </div>
                 <div class="col-sm-4">
                     <div class="input-group mb-3">
                         <span class="input-group-text">Prazo</span>
-                        <input name="prazo" type="text" autocomplete="off" class="form-control" value="{{ prazo_default }}" placeholder="AAAA-MM-DD">
+                        <input name="prazo" type="text" autocomplete="off" class="form-control" value="{{ prazo_default | data }}" placeholder="DD-MM-AAAA">
                     </div>
                 </div>
             </div>

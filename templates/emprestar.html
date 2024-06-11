@@ -73,13 +73,13 @@
                         <div class="col-lg-6">
                             <div class="input-group mb-3">
                                 <span class="input-group-text">Data</span>
-                                <input name="data" type="text" class="form-control" autocomplete="off" value="{{ data.hoje }}" disabled>
+                                <input name="data" type="text" class="form-control" autocomplete="off" value="{{ data.hoje | data }}" disabled>
                             </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="input-group mb-3">
                                 <span class="input-group-text">Prazo</span>
-                                <input name="prazo" type="text" class="form-control" autocomplete="off" value="{{ data.prazodefault }}">
+                                <input name="prazo" type="text" class="form-control" autocomplete="off" value="{{ data.prazodefault | data }}">
                             </div>
                         </div>
                     </div>

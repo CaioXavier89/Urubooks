@@ -50,13 +50,13 @@
                     <div class="col-sm-4">
                         <div class="input-group mb-3">
                             <span class="input-group-text">Data</span>
-                            <input name="data" type="text" class="form-control" value="{{ hoje }}" disabled>
+                            <input name="data" type="text" class="form-control" value="{{ hoje | data }}" disabled>
                         </div>
                     </div>
                     <div class="col-sm-4">
                         <div class="input-group mb-3">
                             <span class="input-group-text">Prazo</span>
-                            <input name="prazo" type="text" autocomplete="off" class="form-control" value="{{ prazo_default }}" placeholder="AAAA-MM-DD">
+                            <input name="prazo" type="text" autocomplete="off" class="form-control" value="{{ prazo_default | data }}" placeholder="AAAA-MM-DD">
                         </div>
                     </div>
                 </div>

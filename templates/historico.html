@@ -19,7 +19,7 @@
             {% if historico %}
                 {% for registro in historico %}
                     <tr>
-                        <td>{{ registro.data }}</td>
+                        <td>{{ registro.data | data }}</td>
                         <td>{{ registro.operacao }}</td>
                         {% set nome = registro.nome if registro.nome else "--" %}
                         <td>{{ nome }}</td>

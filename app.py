@@ -7,7 +7,8 @@ from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 import ast
 
-from helpers import login_required
+from helpers import login_required, data, JIS_to_ISO
+
 port = os.environ.get('PORT')
 
 # Configure application
@@ -22,6 +23,9 @@ Session(app)
 db = SQL("sqlite:///urubooks.db")
 
 # Estilos possíveis para as flash messages
+
+'''
+# estilos dos flashes
 FLASH_STYLES = [
     "primary",
     "secondary",
@@ -35,11 +39,8 @@ FLASH_STYLES = [
 PLANOS = [
     "BÁSICO",
 ]
-PRAZO_EMPRESTIMO_DEFAULT = 15 # DIAS
-PRAZO_ASSINATURA_DEFAULT = 365 # DIAS
-PLANO_ASSINATURA_DEFAULT = "BÁSICO"
-HOJE = date.today()
 
+# operações mostradas no histórico
 OPERAÇÕES_HISTORICO = [
     "INCLUSÃO NO ACERVO",
     "ASSINATURA",
@@ -47,7 +48,18 @@ OPERAÇÕES_HISTORICO = [
     "EMPRÉSTIMO",
     "DEVOLUÇÃO",
 ]
+'''
 
+PRAZO_EMPRESTIMO_DEFAULT = 15 # DIAS
+PRAZO_ASSINATURA_DEFAULT = 365 # DIAS
+PLANO_ASSINATURA_DEFAULT = "BÁSICO"
+HOJE = date.today()
+
+# cria novo filtro jinja para mostrar datas em formato brasileiro
+app.jinja_env.filters["data"] = data
+
+
+# garante que conteúdo não é guardado em cache
 @app.after_request
 def after_request(response):
     """Ensure responses aren't cached"""
@@ -237,7 +249,7 @@ def acervo_incluir():
     
         if request.form.get("user_id"):
             cpf, cpf_error = validate_cpf(request.form.get("user_id"))
-            prazo, prazo_error = validate_iso(request.form.get("prazo"))
+            prazo, prazo_error = validate_JIS(request.form.get("prazo"))
             if obra_id and cpf and prazo:
                 fazer_emprestimo(obra_id, cpf, prazo)
                 flash("Empréstimo cadastrado", "success")
@@ -252,8 +264,8 @@ def acervo_incluir():
     
     # MÉTODO GET    
     else:
-        prazo_default = HOJE + timedelta(days=PRAZO_EMPRESTIMO_DEFAULT)
-        return render_template("acervo/incluir.html", hoje=HOJE, prazo_default=prazo_default)
+        prazo_default = (HOJE + timedelta(days=PRAZO_EMPRESTIMO_DEFAULT)).isoformat()
+        return render_template("acervo/incluir.html", hoje=HOJE.isoformat(), prazo_default=prazo_default)
 
 
 @app.route("/assinatura", methods=["POST"])
@@ -266,14 +278,18 @@ def assinatura():
         return redirect("/usuarios")
     contato_cpf = request.form.get("user_id")
     plano = request.form.get("plano")
-    prazo = request.form.get("prazo")
+    prazo, prazo_error = validate_JIS(request.form.get("prazo"))
     
-    if fazer_assinatura(contato_cpf, plano, prazo) == True:
-        db.execute('INSERT INTO historico (data, contato_cpf, operacao) VALUES(?, ?, "NOVA ASSINATURA")', HOJE.isoformat(), contato_cpf)
-        flash("Assinatura feita com sucesso.", "success")
-        return redirect("/usuarios")
-    else:
-        return redirect("/usuarios")
+    if prazo_error:
+        flash(prazo_error, "danger")
+
+    if contato_cpf and plano and prazo:
+        if fazer_assinatura(contato_cpf, plano, prazo) == True:
+            db.execute('INSERT INTO historico (data, contato_cpf, operacao) VALUES(?, ?, "NOVA ASSINATURA")', HOJE.isoformat(), contato_cpf)
+            flash("Assinatura feita com sucesso.", "success")
+            return redirect("/usuarios")
+
+    return redirect(url_for("usuarios_detalhes", detalhar=contato_cpf))
 
 
 @app.route("/cpf-search")
@@ -317,22 +333,30 @@ def emprestar():
     # O método POST faz as operações de inclusão do empréstimo no banco de dados e no histórico
     if request.method == "POST":
         obra_id = request.form.get("book_id")
-        contato_cpf = validate_cpf(request.form.get("user_id"))[0]
-        prazo = request.form.get("prazo")
+        contato_cpf, cpf_error = validate_cpf(request.form.get("user_id"))
+        prazo, prazo_error = validate_JIS(request.form.get("prazo"))
 
-        if fazer_emprestimo(obra_id, contato_cpf, prazo) == True:
-            db.execute('INSERT INTO historico (data, contato_cpf, obra_id, operacao) VALUES(?, ?, ?, "EMPRÉSTIMO")', HOJE.isoformat(), contato_cpf, obra_id)
-            flash('Empréstimo cadastrado', 'success')
-            return redirect('/')
-        else:
-            return redirect(url_for("emprestar", book_id=obra_id, user_id=contato_cpf))
+        if cpf_error:
+            flash(cpf_error, "danger")
+        if prazo_error:
+            flash(prazo_error, "danger")
+
+        if obra_id and contato_cpf and prazo:
+            if fazer_emprestimo(obra_id, contato_cpf, prazo) == True:
+                db.execute('INSERT INTO historico (data, contato_cpf, obra_id, operacao) VALUES(?, ?, ?, "EMPRÉSTIMO")', HOJE.isoformat(), contato_cpf, obra_id)
+                flash('Empréstimo cadastrado', 'success')
+                return redirect('/')
+            else:
+                return redirect(url_for("emprestar", book_id=obra_id, user_id=contato_cpf))
+        
+        return redirect(url_for("emprestar", book_id=obra_id, user_id=contato_cpf))
     
     # MÉTODO GET
     # O método get é utilizado para disponibilizar e popular os formulários antes de ser enviado para o banco de dado
     else:
         data = {
-            "hoje": HOJE,
-            "prazodefault": HOJE + timedelta(days=PRAZO_EMPRESTIMO_DEFAULT),
+            "hoje": HOJE.isoformat(),
+            "prazodefault": (HOJE + timedelta(days=PRAZO_EMPRESTIMO_DEFAULT)).isoformat(),
         }
 
         if livro := db.execute("SELECT * FROM acervo WHERE id = ?", request.args.get("book_id")):
@@ -441,7 +465,7 @@ def usuarios():
 @app.route("/usuarios/cadastro", methods=["GET", "POST"])
 @login_required
 def usuarios_cadastro():
-    prazo_default = HOJE + timedelta(days=PRAZO_ASSINATURA_DEFAULT)
+    prazo_default = (HOJE + timedelta(days=PRAZO_ASSINATURA_DEFAULT)).isoformat()
     if request.method == "POST":
         nome = request.form.get("nome")
         if not nome:
@@ -460,6 +484,7 @@ def usuarios_cadastro():
 
         if cpf and nome:
             db.execute("INSERT INTO contatos (nome, cpf, telefone, email, endereço, assinante) VALUES (?, ?, ?, ?, ?, 'FALSE')", nome, cpf, telefone, email, endereço)
+            flash("Usuário cadastrado com sucesso!", "success")
         else:
             flash("Não foi possível cadastrar o usuário", "warning")
             # cria dicionário para repopular inputs que tinham sido preenchidos para usuário não perder dados
@@ -473,13 +498,19 @@ def usuarios_cadastro():
             return render_template("usuarios/cadastro.html", usuario=usuario, hoje=HOJE.isoformat(), prazo_default=prazo_default, plano_default=PLANO_ASSINATURA_DEFAULT)
 
         if request.form.get("cadastrar-assinante") == "on":
-            if fazer_assinatura(cpf, request.form.get("plano"), request.form.get("prazo")) == True:
-                db.execute('INSERT INTO historico (data, contato_cpf, operacao) VALUES(?, ?, "NOVA ASSINATURA")', HOJE.isoformat(), cpf)
-            else:
-                flash("Não foi possível fazer a assinatura", "warning")
-                return redirect(url_for("usuarios_detalhes", detalhar=cpf))
+            prazo, prazo_error = validate_JIS(request.form.get("prazo"))
+            plano = request.form.get("plano")
+
+            if prazo_error:
+                flash(prazo_error)
+
+            if cpf and plano and prazo:
+                if fazer_assinatura(cpf, plano, prazo) == True:
+                    db.execute('INSERT INTO historico (data, contato_cpf, operacao) VALUES(?, ?, "NOVA ASSINATURA")', HOJE.isoformat(), cpf)
+                else:
+                    flash("Não foi possível fazer a assinatura", "warning")
+                    return redirect(url_for("usuarios_detalhes", detalhar=cpf))
         
-        flash("Usuário cadastrado com sucesso!", "success")
         return redirect('/')
     # MÉTODO GET
     else:
@@ -542,7 +573,7 @@ def usuarios_detalhes():
             
             assinaturas = db.execute("SELECT * FROM assinaturas WHERE contato_cpf = ? ORDER BY prazo DESC LIMIT 10", user_cpf)
 
-            prazo_default = HOJE + timedelta(days=PRAZO_ASSINATURA_DEFAULT)
+            prazo_default = (HOJE + timedelta(days=PRAZO_ASSINATURA_DEFAULT)).isoformat()
         else:
             flash("Usuário não encontrado", "danger")
             return redirect("/")
@@ -574,13 +605,12 @@ def fazer_assinatura(cpf, plano, prazo):
 
 
 
-def validate_iso(prazo):
-    try:
-        date.fromisoformat(prazo)
-    except ValueError:
-        return (None, "Formato de data inválido. Utilize: AAAA-MM-DD.")
+def validate_JIS(data):
+    data = JIS_to_ISO(data)
+    if not data:
+        return (None, "Formato de data inválido. Utilize: DD/MM/AAAA")
     else:
-        return (prazo, None)
+        return (data, None)
 
 
 def validate_cpf(cpf: str):

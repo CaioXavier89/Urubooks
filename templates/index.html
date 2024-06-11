@@ -6,7 +6,7 @@
 
 {% block main %}
 <div class="container">
-    <h5>Bem-vindo! - {{ hoje }}</h5>
+    <h5>Bem-vindo! - {{ hoje | data }}</h5>
     <hr>
     <span class="dashboard-info border-danger rounded-circle text-center m-1"><tag style="font-size: small;">Acervo</tag><br><h3>{{ acervo }}</h3></span>
     <span class="dashboard-info border-danger rounded-circle text-center m-1"><tag style="font-size: small;">Assinantes</tag><br><h3>{{ usuarios }}</h3></span>
@@ -30,7 +30,7 @@
                             <td>{{ emprestimo.autor }}</td>
                             <td>{{ emprestimo.nome }}</td>
                             {% set color = "red" if emprestimo.atrasado == "true" else "green" %}
-                                <td style="color:{{ color }}"><b>{{ emprestimo.prazo }}<b></td>
+                                <td style="color : {{ color }} "><b>{{ emprestimo.prazo | data }}<b></td>
                         </tr>
                     {% endfor %}
                 {% else %}
@@ -55,7 +55,7 @@
                         {% for assinatura in assinaturas %}
                         <tr>
                             <td>{{ assinatura.nome }}</td>
-                            <td>{{ assinatura.prazo }}</td>
+                            <td>{{ assinatura.prazo | data }}</td>
                         </tr>
                         {% endfor %}
                     {% else %}
