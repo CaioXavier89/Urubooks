@@ -8,7 +8,7 @@
 <h3 class='mb-3'>Incluir livro</h3>
 
 <form id="incluir" action="/acervo/incluir" method="post">
-    <input type="hidden" name="user-id" id="user-id" value="">
+    <input type="hidden" name="user_id" id="user-id" value="">
     <div class="input-group-container">
         
             <div class="input-group mb-3">
@@ -27,9 +27,19 @@
                 <span class="input-group-text">Editora</span>
                 <input name="editora" type="text" class="form-control" autocomplete="off">
             </div>
+            <div class="row justify-content-center">
+                <div class="col-auto">
+                    <div class="input-group mb-3">
+                        <div class="input-group-text">
+                                <input id="emprestar-checkbox" class="form-check-input" name="cadastrar-assinante" type="checkbox">
+                        </div>
+                        <div class="form-control">Incluir com empréstimo</div>
+                    </div>
+                </div>
+            </div>
             <button id="incluir-btn" type='submit' class="btn btn-light btn-border">Incluir</button>
     </div>
-    <div class="input-group-container mt-2">
+    <div id="emprestar-container" style="display: none;" class="input-group-container mt-2">
         <h5 class='mb-3'>Emprestar</h5>
         <div class="row">
             <div class="col-lg-6">
@@ -63,7 +73,7 @@
                     </div>
                 </div>
             </div>
-            <div class="container">
+            <div  id="incluir-btn-2" class="container">
                 <button type="submit" class="btn btn-light btn-border">Incluir livro e emprestar</button>
             </div>
 
@@ -89,12 +99,25 @@
         }
 
         if (user.nome) {
-            document.getElementById("incluir-btn").style.display = "none"; 
             document.getElementById("ass-confirm").style.display = "block";
             if (user.assinante === 'FALSE') {
                 document.getElementById("incluir").setAttribute("onsubmit", "return showWarningAss()");
             }
         }
     }
+</script>
+<script>
+    var checkbox = document.querySelector("#emprestar-checkbox");
+    var container = document.getElementById("emprestar-container");
+    checkbox.addEventListener("change", function() {
+        if (container.style.display == "block") {
+            container.style.display = "none";
+            document.getElementById('incluir-btn').style.display = "inline";
+        }
+        else {
+            container.style.display = "block";
+            document.getElementById('incluir-btn').style.display = "none";
+        }
+    });
 </script>
 {% endblock %}
