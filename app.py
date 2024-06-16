@@ -86,10 +86,10 @@ def index():
                 db.execute('INSERT INTO historico (data, contato_cpf, operacao) VALUES(?, ?, "VENCIMENTO DE ASSINATURA")', HOJE.isoformat(), a["contato_cpf"])
         
     assinaturas = db.execute("SELECT * FROM assinaturas JOIN contatos ON assinaturas.contato_cpf = contatos.cpf\
-                             WHERE assinaturas.status = 'ATIVA' ORDER BY assinaturas.prazo DESC LIMIT 20")
+                             WHERE assinaturas.status = 'ATIVA' ORDER BY assinaturas.prazo LIMIT 20")
     emprestimos = db.execute("SELECT * FROM emprestimos JOIN contatos ON emprestimos.contato_cpf = contatos.cpf\
                              JOIN acervo ON emprestimos.obra_id = acervo.id\
-                             ORDER BY emprestimos.prazo DESC LIMIT 20")
+                             ORDER BY emprestimos.prazo LIMIT 20")
     for e in emprestimos:
         if date.fromisoformat(e["prazo"]) < HOJE:
             e["atrasado"] = "true"
@@ -580,6 +580,19 @@ def usuarios_detalhes():
         
         return render_template("usuarios/detalhes.html", contato=contato, emprestimos=emprestimos, hoje=HOJE.isoformat(), prazo_default=prazo_default, plano_default=PLANO_ASSINATURA_DEFAULT, assinaturas=assinaturas)
 
+@app.route("/usuarios/search")
+@login_required
+def usuario_search():
+    search = request.args.get("search")
+    if len(search) > 1:
+        assinante = ""
+        if request.args.get("filtrar-assinantes") == 'true':
+            assinante = " AND assinante = 'TRUE'"
+        search = "%" + search + "%"
+        query = db.execute("SELECT * FROM contatos WHERE nome LIKE ?" + assinante + " ORDER BY nome LIMIT 20", search)       
+        return jsonify(query)
+
+
 # FUNÇÕES
 def fazer_emprestimo(id, cpf, prazo):
     if date.fromisoformat(prazo) < HOJE:
@@ -610,7 +623,12 @@ def validate_JIS(data):
     if not data:
         return (None, "Formato de data inválido. Utilize: DD/MM/AAAA")
     else:
-        return (data, None)
+        try:
+            date.fromisoformat(data)
+        except ValueError:
+            return (None, "Data inválida.")
+        else:
+            return (data, None)
 
 
 def validate_cpf(cpf: str):

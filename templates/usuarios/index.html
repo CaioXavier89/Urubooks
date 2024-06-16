@@ -5,9 +5,14 @@
 {% endblock %}
 
 {% block main %}
-    <h3 class='mb-3'>Usuários</h3>
-    <div class="row justify-content-center">
+    <h3 id='teste' class='mb-3'>Usuários</h3>
+    <div class="row justify-content-left">
         {% set checked = "checked" if filtro == "on" else "" %}
+            <div class="col-auto">
+                <div class="input-group mb-3">
+                    <input id="search" name="search" type="text" class="form-control" placeholder="Procurar" autocomplete="off">
+                </div>
+            </div>
             <div class="col-auto">
                 <div class="input-group mb-3">
                     <div class="input-group-text">
@@ -94,6 +99,31 @@
 <script>
     document.getElementById('assinantes-checkbox').addEventListener('change', function() {
             document.getElementById('filtrar-assinantes').submit();
+    });
+</script>
+<script>
+    let input = document.getElementById("search");
+    input.addEventListener("input", async function() {
+        let response = await fetch('/usuarios/search?search=' + input.value + '&filtrar-assinantes=' + document.getElementById('assinantes-checkbox').checked);
+        let users = await response.json();
+        let html = '';
+        for (let row in users) {
+            html += '<tr><td>' + users[row].cpf + '</td><td>' + users[row].nome + '</td><td>' + users[row].telefone + '</td><td class="display-desktop">' + users[row].email + '</td><td class="display-desktop">' + users[row].endereço +
+                    '</td><td class="options-cell"><form action="/usuarios/detalhes" method="get"><input name="detalhar" value="' + users[row].cpf +
+                    '" type="hidden"/><button title="Detalhes" type="submit" class="btn btn-outline-primary mx-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/></svg></button></form></td></tr>'
+                }
+        if (html) {
+            document.querySelector('tbody').innerHTML = html;
+        }
+        else {
+            document.querySelector('tbody').innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum usuário encontrado.</td></tr>';
+        }
+    });
+
+    input.addEventListener("blur", function() {
+        if (input.value == '') {
+            window.location.href = '/usuarios';
+        }
     });
 </script>
 {% endblock %}
