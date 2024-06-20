@@ -381,7 +381,7 @@ def historico():
     pagina = int(request.args.get("pagina", 0))
     offset = REGISTRO_POR_PAGINA * pagina
     historico = db.execute("SELECT * FROM historico LEFT JOIN acervo on historico.obra_id = acervo.id \
-                           LEFT JOIN contatos on historico.contato_cpf = contatos.cpf ORDER BY historico.data DESC LIMIT ?, ?",
+                           LEFT JOIN contatos on historico.contato_cpf = contatos.cpf ORDER BY historico.data DESC, historico.id DESC LIMIT ?, ?",
                            offset, REGISTRO_POR_PAGINA)
     page_data = {
         "atual":pagina,
